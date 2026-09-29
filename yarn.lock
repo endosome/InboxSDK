@@ -1545,6 +1545,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@calendarsdk/google-api@workspace:packages/google-api":
+  version: 0.0.0-use.local
+  resolution: "@calendarsdk/google-api@workspace:packages/google-api"
+  peerDependencies:
+    "@calendarsdk/core": "*"
+  languageName: unknown
+  linkType: soft
+
 "@csstools/css-parser-algorithms@npm:^2.1.1":
   version: 2.1.1
   resolution: "@csstools/css-parser-algorithms@npm:2.1.1"

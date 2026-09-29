@@ -1,0 +1,19 @@
+{
+  "name": "@calendarsdk/google-api",
+  "version": "0.1.0",
+  "description": "Google Calendar API data provider for @calendarsdk/core. You supply the OAuth token; this package never asks for credentials.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "CalendarSDK contributors",
+  "license": "(MIT OR Apache-2.0)",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "../../node_modules/.bin/esbuild src/index.ts --bundle --format=esm --target=es2022 --outfile=dist/index.js --sourcemap && ../../node_modules/.bin/tsc -p tsconfig.build.json"
+  },
+  "peerDependencies": {
+    "@calendarsdk/core": "*"
+  }
+}

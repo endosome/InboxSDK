@@ -688,6 +688,18 @@ baseline covers `en`, ui-kind 10, one account — other variants need their own
 baselines; issue filing and the scheduled job are deliberately not wired up.
 _Exit:_ drill passes (met); nightly green for a week (pending).
 
+**`@calendarsdk/google-api` (built, unverified live).** `packages/google-api`
+implements `CalendarDataProvider` over `events.get` / `calendarList`. The
+extension supplies `getAccessToken` (the package never asks for credentials and
+never puts the token in errors). Rules: only `kind: 'event'` with a known
+`calendarId` (never guessed; optional `resolveCalendarId`); recurring instances
+by instance id, 404 → `null` (never the series); 401 → one refresh, 429/5xx →
+retries. The core exposes it as `sdk.Data.getEvent/listCalendars` and
+`load({ dataProvider })`. The live API check is
+`tools/calendar-probe/api-correlate.mjs`, which the owner runs with
+`CALSDK_TEST_TOKEN` (prints booleans and id shapes only). Until it has run,
+"instance ids of the form `<id>_<UTC start>` match the API" stays **[H]**.
+
 ## 13. Risks
 
 | Risk                                              | Mitigation                                                                                                                       |
@@ -766,12 +778,12 @@ _Exit:_ drill passes (met); nightly green for a week (pending).
 
 ## 17. Decisions needed from the project owner
 
-| Decision                                                             | Options / recommendation                                                   |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Package name/scope and repo name                                     | `@calendarsdk/*` is a placeholder; pick before Phase 1 rebrand             |
-| Delete Gmail in-place (this fork) vs new clean repo                  | recommended: delete wholesale in this fork to keep git history and tooling |
-| V1 `EventView` on move: destroy+recreate vs `onElementChange`        | recommended: destroy+recreate (simpler; documented)                        |
-| Calendar API leg: build `@calendarsdk/google-api` in V1?             | recommended: interface only in V1; package after Phase 4 API check         |
-| Supply a Workspace test account and an OAuth token for the API check | needed for Phase 4 exit                                                    |
-| Scheduled live compat runs (ToS/automation)                          | needs owner sign-off before enabling nightly job                           |
-| Browser support beyond Chromium                                      | recommended: Chromium-first, revisit after V1                              |
+| Decision                                                             | Options / recommendation                                                                                        |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Package name/scope and repo name                                     | **DECIDED: keep `@calendarsdk/*` for now**; revisit before publishing                                           |
+| Delete Gmail in-place (this fork) vs new clean repo                  | recommended: delete wholesale in this fork to keep git history and tooling                                      |
+| V1 `EventView` on move: destroy+recreate vs `onElementChange`        | recommended: destroy+recreate (simpler; documented)                                                             |
+| Calendar API leg: build `@calendarsdk/google-api` in V1?             | **DECIDED: yes, in V1** (`packages/google-api`, built; live correlation still unverified)                       |
+| Supply a Workspace test account and an OAuth token for the API check | needed for Phase 4 exit                                                                                         |
+| Scheduled live compat runs (ToS/automation)                          | **DECIDED: manual for now; scheduling infrastructure is ready but disabled** (`tools/calendar-probe/schedule/`) |
+| Browser support beyond Chromium                                      | recommended: Chromium-first, revisit after V1                                                                   |

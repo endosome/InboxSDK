@@ -49,7 +49,66 @@ export interface Compat {
   onIssue(handler: (issue: CompatIssue) => void): () => void;
 }
 
+/** A person on an event. Provider-supplied; the core SDK never reads Calendar's network traffic. */
+export interface CalendarAttendee {
+  email: string;
+  displayName?: string;
+  responseStatus?: 'needsAction' | 'declined' | 'tentative' | 'accepted';
+  self?: boolean;
+  organizer?: boolean;
+  optional?: boolean;
+}
+
+/** Event details from a data provider (for example `@calendarsdk/google-api`). */
+export interface CalendarEvent {
+  /** API event id (instance id for a recurring instance, e.g. `<id>_20260929T110000Z`). */
+  id: string;
+  calendarId: string;
+  iCalUID?: string;
+  status?: 'confirmed' | 'tentative' | 'cancelled';
+  title?: string;
+  description?: string;
+  location?: string;
+  allDay: boolean;
+  /** ISO 8601 date-time, or `YYYY-MM-DD` for all-day events. */
+  start: string;
+  end: string;
+  timeZone?: string;
+  recurringEventId?: string;
+  attendees?: CalendarAttendee[];
+  conferenceUrl?: string;
+  htmlLink?: string;
+}
+
+export interface CalendarInfo {
+  id: string;
+  title: string;
+  primary?: boolean;
+  accessRole?: 'freeBusyReader' | 'reader' | 'writer' | 'owner';
+  timeZone?: string;
+}
+
+/**
+ * Supplies data Calendar's page does not expose. It is OWNED BY THE EXTENSION:
+ * OAuth, tokens and network access stay outside the core SDK.
+ */
+export interface CalendarDataProvider {
+  /** Resolve to null when the item does not exist or cannot be identified. */
+  getEvent(ref: EventRef): Promise<CalendarEvent | null>;
+  listCalendars?(): Promise<CalendarInfo[]>;
+}
+
+/** Access to the extension's `dataProvider`. */
+export interface Data {
+  /** Rejects if no `dataProvider` was passed to `load()`. */
+  getEvent(ref: EventRef): Promise<CalendarEvent | null>;
+  /** Rejects if there is no provider or it cannot list calendars. */
+  listCalendars(): Promise<CalendarInfo[]>;
+}
+
 export interface LoadOptions {
+  /** Optional source of event details (attendees, description, …); see `CalendarDataProvider`. */
+  dataProvider?: CalendarDataProvider;
   /** Opaque namespace for your extension. */
   appId: string;
   /** Extra selector candidates PREPENDED to the SDK's bundled chains. */
@@ -223,6 +282,7 @@ export interface CalendarSDK {
   readonly Router: Router;
   readonly User: User;
   readonly Compat: Compat;
+  readonly Data: Data;
   readonly LOADER_VERSION: string;
   readonly IMPL_VERSION: string;
   readonly Logger: AppLogger;

@@ -11,3 +11,4 @@ examples/*/*
 /packages/core/src
 .pnp.*
 .yarn/*
+/packages/google-api/dist

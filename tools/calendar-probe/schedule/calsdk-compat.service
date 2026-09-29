@@ -1,0 +1,8 @@
+[Unit]
+Description=CalendarSDK compat run (read-only)
+
+[Service]
+Type=oneshot
+# edit to your checkout
+WorkingDirectory=%h/InboxSDK/tools/calendar-probe
+ExecStart=%h/InboxSDK/tools/calendar-probe/compat-nightly.sh

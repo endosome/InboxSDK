@@ -13,5 +13,10 @@ export function badgeStyleText(): string {
 .calsdk-badge--clickable { cursor: pointer; }
 .calsdk-badge--clickable:hover { background: rgba(32, 33, 36, 0.95); }
 .calsdk-badge__icon { width: 10px; height: 10px; flex: none; }
+/* narrow chip: a dot instead of a text pill, so the title stays readable (full text stays in the tooltip) */
+.calsdk-badges[data-calsdk-compact] { top: 2px; right: 2px; }
+.calsdk-badges[data-calsdk-compact] .calsdk-badge { width: 10px; height: 10px; padding: 0; gap: 0; justify-content: center; border-radius: 50%; }
+.calsdk-badges[data-calsdk-compact] .calsdk-badge > span { display: none; }
+.calsdk-badges[data-calsdk-compact] .calsdk-badge__icon { width: 8px; height: 8px; }
 `;
 }

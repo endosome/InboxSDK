@@ -404,3 +404,126 @@ test('updating a badge keeps its position among the others', () => {
   h.registry.stop();
   h.reconciler.stop();
 });
+
+describe('compact badges in narrow chips', () => {
+  type Cb = (
+    entries: { target: Element; contentRect: { width: number } }[],
+  ) => void;
+  const created: FakeRO[] = [];
+  class FakeRO {
+    observed = new Set<Element>();
+    disconnected = false;
+    constructor(readonly cb: Cb) {
+      created.push(this);
+    }
+    observe(el: Element) {
+      this.observed.add(el);
+    }
+    unobserve(el: Element) {
+      this.observed.delete(el);
+    }
+    disconnect() {
+      this.disconnected = true;
+      this.observed.clear();
+    }
+  }
+  const realRO = (window as any).ResizeObserver;
+  beforeEach(() => {
+    created.length = 0;
+    (window as any).ResizeObserver = FakeRO;
+  });
+  afterEach(() => {
+    (window as any).ResizeObserver = realRO;
+  });
+
+  const positionedChip = (width: number) => {
+    const chip = makeChip({ decoded: 'a owner@m' });
+    chip.style.position = 'absolute';
+    chip.getBoundingClientRect = () =>
+      ({
+        width,
+        height: 40,
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        right: width,
+        bottom: 40,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    return chip;
+  };
+  const resizeTo = (chip: HTMLElement, width: number) => {
+    chip.getBoundingClientRect = () => ({ width }) as DOMRect;
+  };
+  const compact = (chip: Element) =>
+    chip
+      .querySelector('[data-calsdk-badges]')!
+      .hasAttribute('data-calsdk-compact');
+
+  test('narrow chips start compact, wide ones do not; resizing toggles it', () => {
+    const h = harness();
+    const narrow = positionedChip(40);
+    const wide = positionedChip(150);
+    h.main.append(narrow, wide);
+    start(h);
+    h.views[0].addBadge({ text: 'CRM' });
+    h.views[1].addBadge({ text: 'CRM' });
+    expect(compact(narrow)).toBe(true);
+    expect(compact(wide)).toBe(false);
+
+    const ro = created[0];
+    resizeTo(wide, 50);
+    ro.cb([{ target: wide, contentRect: { width: 50 } }]);
+    expect(compact(wide)).toBe(true);
+    resizeTo(narrow, 200);
+    ro.cb([{ target: narrow, contentRect: { width: 200 } }]);
+    expect(compact(narrow)).toBe(false);
+    h.registry.stop();
+    h.reconciler.stop();
+  });
+
+  test('a zero width (hidden chip) is not compact; the text stays in the DOM and the tooltip', () => {
+    const h = harness();
+    const chip = positionedChip(0);
+    h.main.append(chip);
+    start(h);
+    h.views[0].addBadge({ text: 'CRM', title: 'Open in CRM' });
+    expect(compact(chip)).toBe(false);
+    const badge = chip.querySelector('[data-calsdk-badge]') as HTMLElement;
+    expect(badge.textContent).toBe('CRM');
+    expect(badge.title).toBe('Open in CRM');
+    h.registry.stop();
+    h.reconciler.stop();
+  });
+
+  test('the observer stops watching a chip when its badges go, and is disconnected on stop', () => {
+    const h = harness();
+    const chip = positionedChip(40);
+    h.main.append(chip);
+    start(h);
+    const handle = h.views[0].addBadge({ text: 'CRM' });
+    const ro = created[0];
+    expect(ro.observed.has(chip)).toBe(true);
+    handle.remove();
+    expect(ro.observed.has(chip)).toBe(false);
+    h.views[0].addBadge({ text: 'again' });
+    expect(ro.observed.has(chip)).toBe(true);
+    h.registry.stop();
+    h.reconciler.stop();
+    expect(ro.disconnected).toBe(true);
+  });
+
+  test('a repaired badge (Calendar stripped the chip) keeps its compact state', async () => {
+    const h = harness();
+    const chip = positionedChip(40);
+    h.main.append(chip);
+    start(h);
+    h.views[0].addBadge({ text: 'CRM' });
+    chip.replaceChildren();
+    await flush();
+    expect(compact(chip)).toBe(true);
+    h.registry.stop();
+    h.reconciler.stop();
+  });
+});

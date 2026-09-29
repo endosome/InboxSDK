@@ -10,6 +10,8 @@ import { badgeStyleText } from './badge-style';
 /** Marks every node the SDK injects, so its own mutations can be recognised. */
 const OWNED_ATTR = 'data-calsdk-owned';
 const STYLE_ID = 'calsdk-badge-style';
+/** Chips narrower than this (px) get compact badges. */
+const COMPACT_BELOW_PX = 72;
 
 type BadgeEntry = {
   descriptor: BadgeDescriptor;
@@ -45,6 +47,7 @@ export default class InjectionReconciler implements BadgeHost {
   readonly #env: ReconcilerEnv;
   readonly #views = new Map<CalendarEventViewDriver, ViewEntry>();
   #observer: MutationObserver | null = null;
+  #sizeObserver: ResizeObserver | null = null;
   #stopped = false;
 
   constructor(env: ReconcilerEnv) {
@@ -63,6 +66,8 @@ export default class InjectionReconciler implements BadgeHost {
     if (this.#stopped) return;
     this.#stopped = true;
     this.#observer?.disconnect();
+    this.#sizeObserver?.disconnect();
+    this.#sizeObserver = null;
     for (const entry of this.#views.values()) this.#teardown(entry);
     this.#views.clear();
   }
@@ -112,7 +117,7 @@ export default class InjectionReconciler implements BadgeHost {
         badge.node = null;
         view!.badges = view!.badges.filter((b) => b !== badge);
         if (view!.badges.length === 0) {
-          view!.container?.remove();
+          this.#dropContainer(view!.container);
           view!.container = null;
         }
       },
@@ -132,7 +137,7 @@ export default class InjectionReconciler implements BadgeHost {
       badge.node?.remove();
       badge.node = null;
     }
-    entry.container?.remove();
+    this.#dropContainer(entry.container);
     entry.container = null;
     entry.badges = [];
   }
@@ -180,7 +185,7 @@ export default class InjectionReconciler implements BadgeHost {
 
       let container = view.container;
       if (!container || container.parentElement !== chip) {
-        container?.remove();
+        this.#dropContainer(container);
         container = this.#buildContainer(chip);
         view.container = container;
         for (const b of view.badges) b.node = null; // parent changed: rebuild children
@@ -222,7 +227,54 @@ export default class InjectionReconciler implements BadgeHost {
     container.className = positioned
       ? 'calsdk-badges calsdk-badges--corner'
       : 'calsdk-badges calsdk-badges--inline';
+    if (positioned) this.#watchWidth(chip, container);
     return container;
+  }
+
+  /**
+   * In a narrow chip a text badge would cover its title, so the badge shrinks
+   * to a dot (`data-calsdk-compact`, see badge-style.ts); the tooltip keeps the
+   * full text. Chips change width with the window, hence the ResizeObserver.
+   */
+  #watchWidth(chip: HTMLElement, container: HTMLElement) {
+    const Observer = this.#env.document.defaultView?.ResizeObserver;
+    if (!Observer) return;
+    this.#sizeObserver ??= new Observer((entries) => {
+      for (const entry of entries) {
+        const chip = entry.target as HTMLElement;
+        // border box, like the initial measurement below (contentRect excludes padding)
+        const width = chip.getBoundingClientRect().width;
+        for (const c of this.#ownContainers(chip)) {
+          c.toggleAttribute(
+            'data-calsdk-compact',
+            width > 0 && width < COMPACT_BELOW_PX,
+          );
+        }
+      }
+    });
+    this.#sizeObserver.observe(chip); // fires once right away with the current size
+    container.toggleAttribute(
+      'data-calsdk-compact',
+      chip.getBoundingClientRect().width > 0 &&
+        chip.getBoundingClientRect().width < COMPACT_BELOW_PX,
+    );
+  }
+
+  #ownContainers(chip: Element): HTMLElement[] {
+    return [
+      ...chip.querySelectorAll<HTMLElement>(
+        `:scope > [data-calsdk-badges][${OWNED_ATTR}="${this.#env.appId}"]`,
+      ),
+    ];
+  }
+
+  #dropContainer(container: HTMLElement | null) {
+    if (!container) return;
+    const chip = container.parentElement;
+    container.remove();
+    if (chip && this.#ownContainers(chip).length === 0) {
+      this.#sizeObserver?.unobserve(chip);
+    }
   }
 
   #buildBadge(badge: BadgeEntry): HTMLElement {

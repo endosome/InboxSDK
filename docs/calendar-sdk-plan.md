@@ -599,12 +599,15 @@ initial week, after **5 popover open/close cycles**, all view keys, **50
 navigations**, mid-drag and after a returned drag, **dark theme**, **compact
 density**, restored settings, month and schedule views; **per-frame meter: 0 of
 2841 frames had a chip (≥3 frames old) without its badge**; extension-URL icons
-load under the page CSP; badge click gave the right event and no popover. _Known
-cosmetics:_ in narrow week chips the corner badge covers part of the title text;
-placement can be refined later. _Not covered:_ badges on task/birthday views
-(mechanism identical), timezone change, Workspace. _Exit met:_ badge survives 50
-navigations + popover open/close + drag + resize-independent density/theme
-changes without duplicates or stale text.
+load under the page CSP; badge click gave the right event and no popover.
+_Cosmetics (fixed in the coverage pass):_ in narrow chips (< 72 px border box)
+the badge becomes a 10 px dot (`data-calsdk-compact`, driven by a per-reconciler
+`ResizeObserver`; text stays in the tooltip), verified live 1300 → 600 → 1300
+px: compact exactly for chips narrower than 72 px. On wide chips the pill can
+still overlap the end of a long title (accepted). _Not covered:_ badges on
+task/birthday views (mechanism identical), timezone change, Workspace. _Exit
+met:_ badge survives 50 navigations + popover open/close + drag +
+resize-independent density/theme changes without duplicates or stale text.
 
 **Phase 6 — Popovers. DONE on branch `calendar-sdk-phase6`.** _Goal:_
 `registerEventPopoverHandler` + `addButton`. _Code:_ `services/popover-registry`

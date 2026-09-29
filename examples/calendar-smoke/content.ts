@@ -134,7 +134,10 @@ function injectionChecks() {
     return ok;
   });
   tt.insertAdjacentHTMLOnBody = attempt(() => {
-    document.body.insertAdjacentHTML('beforeend', '<i id="calsdk-adj-probe"></i>');
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<i id="calsdk-adj-probe"></i>',
+    );
     const ok = !!document.getElementById('calsdk-adj-probe');
     document.getElementById('calsdk-adj-probe')?.remove();
     return ok;

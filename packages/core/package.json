@@ -17,9 +17,6 @@
     "@babel/runtime": "^7.23.1",
     "@types/kefir": "^3.8.6",
     "@types/node": "^24.2.0",
-    "asap": "^2.0.3",
-    "live-set": "^1.0.0",
-    "page-parser-tree": "^0.4.0",
-    "tag-tree": "^1.0.0"
+    "asap": "^2.0.3"
   }
 }

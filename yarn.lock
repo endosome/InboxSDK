@@ -1461,7 +1461,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.20.13, @babel/runtime@npm:^7.23.1, @babel/runtime@npm:^7.4.5, @babel/runtime@npm:^7.8.4":
+"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.23.1, @babel/runtime@npm:^7.8.4":
   version: 7.23.1
   resolution: "@babel/runtime@npm:7.23.1"
   dependencies:
@@ -1525,9 +1525,6 @@ __metadata:
     "@types/kefir": "npm:^3.8.6"
     "@types/node": "npm:^24.2.0"
     asap: "npm:^2.0.3"
-    live-set: "npm:^1.0.0"
-    page-parser-tree: "npm:^0.4.0"
-    tag-tree: "npm:^1.0.0"
   languageName: unknown
   linkType: soft
 
@@ -2577,13 +2574,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/transducers.js@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@types/transducers.js@npm:0.3.0"
-  checksum: 10/93fe162520b6875cf08463ca049be8cce4e85ae40103a57453b5c352682aff30a275a79f1e0d2c10b51bb28859a466cee638ae7c524e58e2b6d3a0f34d71b76c
-  languageName: node
-  linkType: hard
-
 "@types/undertaker-registry@npm:*":
   version: 1.0.1
   resolution: "@types/undertaker-registry@npm:1.0.1"
@@ -2645,13 +2635,6 @@ __metadata:
   dependencies:
     "@types/yargs-parser": "npm:*"
   checksum: 10/03d9a985cb9331b2194a52d57a66aad88bf46aa32b3968a71cc6f39fb05c74f0709f0dd3aa9c0b29099cfe670343e3b1bd2ac6df2abfab596ede4453a616f63f
-  languageName: node
-  linkType: hard
-
-"@types/zen-observable@npm:^0.8.0":
-  version: 0.8.2
-  resolution: "@types/zen-observable@npm:0.8.2"
-  checksum: 10/558959fc0482d329cedbd9eabb591849a3dab9574880d3b0781e6916d57cd87fc2268f85d5fe236b58eab8c4063e4aaebd4e9c302b9e56af372d15732c26bb99
   languageName: node
   linkType: hard
 
@@ -3412,7 +3395,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"asap@npm:^2.0.3, asap@npm:^2.0.5":
+"asap@npm:^2.0.3":
   version: 2.0.6
   resolution: "asap@npm:2.0.6"
   checksum: 10/b244c0458c571945e4b3be0b14eb001bea5596f9868cc50cc711dc03d58a7e953517d3f0dad81ccde3ff37d1f074701fa76a6f07d41aaa992d7204a37b915dda
@@ -3889,7 +3872,6 @@ __metadata:
     babel-plugin-transform-inline-environment-variables: "npm:^0.4.3"
     buffer: "npm:^6.0.3"
     concat-stream: "npm:^2.0.0"
-    contain-by-screen: "npm:^1.0.3"
     css-loader: "npm:^6.7.3"
     eslint: "npm:^8.41.0"
     eslint-plugin-deprecate: "npm:^0.7.0"
@@ -3904,11 +3886,7 @@ __metadata:
     kefir: "npm:^3.8.3"
     kefir-stopper: "npm:^2.1.0"
     lint-staged: "npm:^12.3.5"
-    live-set: "npm:^1.0.0"
     lodash: "npm:^4.14.0"
-    matches-selector-ng: "npm:^1.0.0"
-    order-manager: "npm:^1.0.3"
-    page-parser-tree: "npm:^0.4.0"
     pdelay: "npm:^2.0.0"
     postcss: "npm:^8.4.21"
     postcss-csso: "npm:^6.0.1"
@@ -3924,7 +3902,6 @@ __metadata:
     stylelint: "npm:^15.6.2"
     stylelint-config-css-modules: "npm:^4.2.0"
     stylelint-config-standard: "npm:^33.0.0"
-    tag-tree: "npm:^1.0.0"
     typescript: "npm:^5.3.3"
     webpack: "npm:^5.76.3"
   languageName: unknown
@@ -4394,17 +4371,6 @@ __metadata:
   version: 1.1.0
   resolution: "console-control-strings@npm:1.1.0"
   checksum: 10/27b5fa302bc8e9ae9e98c03c66d76ca289ad0c61ce2fe20ab288d288bee875d217512d2edb2363fc83165e88f1c405180cf3f5413a46e51b4fe1a004840c6cdb
-  languageName: node
-  linkType: hard
-
-"contain-by-screen@npm:^1.0.3":
-  version: 1.3.0
-  resolution: "contain-by-screen@npm:1.3.0"
-  dependencies:
-    "@babel/runtime": "npm:^7.0.0"
-    envify: "npm:^4.1.0"
-    lodash: "npm:^4.6.1"
-  checksum: 10/cc84c40952052d26c7bf54b67bff31befe0c5cd9902abb6f431d2beb2b4f220584658215f9b792004e6ab4602196504e90e1c3827adc50079d570bf59d62b7ec
   languageName: node
   linkType: hard
 
@@ -4970,18 +4936,6 @@ __metadata:
   version: 2.2.1
   resolution: "env-paths@npm:2.2.1"
   checksum: 10/65b5df55a8bab92229ab2b40dad3b387fad24613263d103a97f91c9fe43ceb21965cd3392b1ccb5d77088021e525c4e0481adb309625d0cb94ade1d1fb8dc17e
-  languageName: node
-  linkType: hard
-
-"envify@npm:^4.0.0, envify@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "envify@npm:4.1.0"
-  dependencies:
-    esprima: "npm:^4.0.0"
-    through: "npm:~2.3.4"
-  bin:
-    envify: bin/envify
-  checksum: 10/ee48873a56a117b812fb5e4d50870bf4440f5ba3462db4f4677e041fbdf2d05c70d72baa59af5f584373ab54d751b6543087a9afd4313774e058f020486728b8
   languageName: node
   linkType: hard
 
@@ -6711,13 +6665,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"immutability-helper@npm:^3.1.1":
-  version: 3.1.1
-  resolution: "immutability-helper@npm:3.1.1"
-  checksum: 10/f5cbbd3c39341f6119c0533618dc282c828a752994670f459eebb2ac35f051255963ba1480031230800b19eb05acdd09d2e757e7804d7494eb024eed065a33b5
-  languageName: node
-  linkType: hard
-
 "import-fresh@npm:^3.0.0, import-fresh@npm:^3.2.1":
   version: 3.3.0
   resolution: "import-fresh@npm:3.3.0"
@@ -8267,21 +8214,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"live-set@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "live-set@npm:1.0.0"
-  dependencies:
-    "@babel/runtime": "npm:^7.0.0"
-    "@types/transducers.js": "npm:^0.3.0"
-    "@types/zen-observable": "npm:^0.8.0"
-    asap: "npm:^2.0.5"
-    envify: "npm:^4.0.0"
-    symbol-observable: "npm:^1.0.4"
-    zen-observable: "npm:^0.8.9"
-  checksum: 10/f0d020348ff88a8521ffa0efaf2fb2f31b25b287a554842771494f3068a7e317bae7552a5ea08846ef3cec98d198fcd9fd2e39ce9f4b37f0fcb74cb0d8782654
-  languageName: node
-  linkType: hard
-
 "load-json-file@npm:^1.0.0":
   version: 1.1.0
   resolution: "load-json-file@npm:1.1.0"
@@ -8358,7 +8290,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.0.0, lodash@npm:^4.14.0, lodash@npm:^4.16.6, lodash@npm:^4.6.1":
+"lodash@npm:^4.0.0":
+  version: 4.18.1
+  resolution: "lodash@npm:4.18.1"
+  checksum: 10/306fea53dfd39dad1f03d45ba654a2405aebd35797b673077f401edb7df2543623dc44b9effbb98f69b32152295fff725a4cec99c684098947430600c6af0c3f
+  languageName: node
+  linkType: hard
+
+"lodash@npm:^4.14.0":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: 10/c08619c038846ea6ac754abd6dd29d2568aa705feb69339e836dfa8d8b09abbb2f859371e86863eda41848221f9af43714491467b5b0299122431e202bb0c532
@@ -8513,13 +8452,6 @@ __metadata:
     resolve: "npm:^1.4.0"
     stack-trace: "npm:0.0.10"
   checksum: 10/2fc824d96fd80ea5fbdb46779b610ee694c138a8b10a267a29b442d9253b489d01866a1557e48ef98923b7132b94c868cb937b7564d6d2900729abaec75197d9
-  languageName: node
-  linkType: hard
-
-"matches-selector-ng@npm:^1.0.0":
-  version: 1.1.0
-  resolution: "matches-selector-ng@npm:1.1.0"
-  checksum: 10/6abc7e95fc903dac58baa7f4b0d8dc823cb854979d1c6839e1a847095cd87ae26752240d63a326780b8dd526cb7d277fa9905364e44573e951a50f001a0b9181
   languageName: node
   linkType: hard
 
@@ -9266,17 +9198,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"order-manager@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "order-manager@npm:1.0.3"
-  dependencies:
-    "@babel/runtime": "npm:^7.20.13"
-    immutability-helper: "npm:^3.1.1"
-    lodash: "npm:^4.16.6"
-  checksum: 10/cf876d17ddc3723a462272b05e35638db38555414e88db0ff74711947c9c415ef9a596394719a86ea873bf7139605c300aee1b47867f2cbd3f0142ebf06bb456
-  languageName: node
-  linkType: hard
-
 "ordered-read-streams@npm:^1.0.0":
   version: 1.0.1
   resolution: "ordered-read-streams@npm:1.0.1"
@@ -9353,19 +9274,6 @@ __metadata:
   version: 2.2.0
   resolution: "p-try@npm:2.2.0"
   checksum: 10/f8a8e9a7693659383f06aec604ad5ead237c7a261c18048a6e1b5b85a5f8a067e469aa24f5bc009b991ea3b058a87f5065ef4176793a200d4917349881216cae
-  languageName: node
-  linkType: hard
-
-"page-parser-tree@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "page-parser-tree@npm:0.4.0"
-  dependencies:
-    "@babel/runtime": "npm:^7.4.5"
-    live-set: "npm:^1.0.0"
-    matches-selector-ng: "npm:^1.0.0"
-    tag-tree: "npm:^1.0.0"
-    transducers.js: "npm:^0.3.2"
-  checksum: 10/7f25e4c61c66517881982c96ef05e08927f8063dfdf7cf2d2e11f5088c55ca766539637abf33f5452c52dd91612325a555e456c4d2d56817823fed4a245ace9e
   languageName: node
   linkType: hard
 
@@ -11412,13 +11320,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"symbol-observable@npm:^1.0.4":
-  version: 1.2.0
-  resolution: "symbol-observable@npm:1.2.0"
-  checksum: 10/4684327a2fef2453dcd4238b5bd8f69c460a4708fb8c024a824c6a707ca644b2b2a586e36e5197d0d1162ff48e288299a48844a8c46274ffcfd9260e03df7692
-  languageName: node
-  linkType: hard
-
 "symbol-tree@npm:^3.2.4":
   version: 3.2.4
   resolution: "symbol-tree@npm:3.2.4"
@@ -11436,16 +11337,6 @@ __metadata:
     string-width: "npm:^4.2.3"
     strip-ansi: "npm:^6.0.1"
   checksum: 10/512c4f2bfb6f46f4d5ced19943ae5db1a5163eac1f23ce752625eb49715f84217c1c62bc2d017eb8985b37e0f85731108f654df809c0b34cca1678a672e7ea20
-  languageName: node
-  linkType: hard
-
-"tag-tree@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "tag-tree@npm:1.0.0"
-  dependencies:
-    "@babel/runtime": "npm:^7.0.0"
-    live-set: "npm:^1.0.0"
-  checksum: 10/d5f85342262501b5b1a03955df1c3af213f519fe0ba2bbaf17d8c0f9ee3b891be6dd841b7a9d9c72c35a7ed3a0228d6b29b8108f8a1fac412bccbcdb12d70866
   languageName: node
   linkType: hard
 
@@ -11544,7 +11435,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"through@npm:^2.3.8, through@npm:~2.3.4":
+"through@npm:^2.3.8":
   version: 2.3.8
   resolution: "through@npm:2.3.8"
   checksum: 10/5da78346f70139a7d213b65a0106f3c398d6bc5301f9248b5275f420abc2c4b1e77c2abc72d218dedc28c41efb2e7c312cb76a7730d04f9c2d37d247da3f4198
@@ -11649,13 +11540,6 @@ __metadata:
   dependencies:
     punycode: "npm:^2.1.1"
   checksum: 10/b09a15886cbfaee419a3469081223489051ce9dca3374dd9500d2378adedbee84a3c73f83bfdd6bb13d53657753fc0d4e20a46bfcd3f1b9057ef528426ad7ce4
-  languageName: node
-  linkType: hard
-
-"transducers.js@npm:^0.3.2":
-  version: 0.3.2
-  resolution: "transducers.js@npm:0.3.2"
-  checksum: 10/8cd926895f8b4cb121600523c912db98bc13718f952a8e3ac35cdc05ee89eadaa32d162f11417aea0a85d39a94b15296a27ca1c99bedf92b9d8797e5863de9f7
   languageName: node
   linkType: hard
 
@@ -12512,12 +12396,5 @@ __metadata:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: 10/f77b3d8d00310def622123df93d4ee654fc6a0096182af8bd60679ddcdfb3474c56c6c7190817c84a2785648cdee9d721c0154eb45698c62176c322fb46fc700
-  languageName: node
-  linkType: hard
-
-"zen-observable@npm:^0.8.9":
-  version: 0.8.15
-  resolution: "zen-observable@npm:0.8.15"
-  checksum: 10/30eac3f4055d33f446b4cd075d3543da347c2c8e68fbc35c3f5a19fb43be67c6ed27ee136bc8f8933efa547be7ce04957809ad00ee7f1b00a964f199ae6fb514
   languageName: node
   linkType: hard

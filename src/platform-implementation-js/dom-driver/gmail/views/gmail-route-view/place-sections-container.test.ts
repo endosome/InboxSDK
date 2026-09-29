@@ -1,3 +1,4 @@
+import { GMAIL_SELECTORS } from '../../selectors';
 import SelectorRegistry from '../../../../lib/dom/selectorRegistry';
 import placeSectionsContainer from './place-sections-container';
 
@@ -36,7 +37,7 @@ function toolbarOf(wrapper: HTMLElement): Element {
   return toolbar;
 }
 
-const registry = new SelectorRegistry();
+const registry = new SelectorRegistry(GMAIL_SELECTORS);
 
 test('inserts a new container below the displayed toolbar', () => {
   const current = rowListWrapper({ hidden: false, withToolbar: true });

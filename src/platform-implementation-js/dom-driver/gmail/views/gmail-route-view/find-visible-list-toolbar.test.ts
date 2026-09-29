@@ -1,3 +1,4 @@
+import { GMAIL_SELECTORS } from '../../selectors';
 import SelectorRegistry from '../../../../lib/dom/selectorRegistry';
 import findVisibleListToolbar from './find-visible-list-toolbar';
 
@@ -29,7 +30,7 @@ function listContainer(...wrappers: HTMLElement[]): HTMLElement {
   return main;
 }
 
-const registry = new SelectorRegistry();
+const registry = new SelectorRegistry(GMAIL_SELECTORS);
 
 // After inbox -> search, the stale inbox wrapper comes first, toolbar included.
 test('skips a hidden wrapper that still has a toolbar', () => {

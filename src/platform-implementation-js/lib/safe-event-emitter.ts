@@ -1,5 +1,5 @@
 import EventEmitter from 'events';
-import Logger from './logger';
+import { reportError } from './reporter';
 
 /* eslint-disable prefer-rest-params */
 
@@ -10,7 +10,7 @@ export default class SafeEventEmitter extends EventEmitter {
     try {
       return super.emit.apply(this, arguments as any);
     } catch (e) {
-      Logger.error(e);
+      reportError(e);
       return true;
     }
   }

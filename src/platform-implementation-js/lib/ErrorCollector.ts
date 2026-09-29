@@ -1,4 +1,4 @@
-import Logger from './logger';
+import { reportError } from './reporter';
 
 interface ErrorLog {
   name: string;
@@ -37,7 +37,7 @@ export default class ErrorCollector {
     }
     this._hasReported = true;
     if (this._errorLogs.length) {
-      Logger.error(new Error(`Error Collector: ${this._name}`), {
+      reportError(new Error(`Error Collector: ${this._name}`), {
         errorLogs: this._errorLogs,
         extra: errorDataCb(),
       });

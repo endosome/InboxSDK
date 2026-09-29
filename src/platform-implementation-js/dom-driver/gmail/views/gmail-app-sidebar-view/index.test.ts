@@ -21,6 +21,7 @@ import GmailAppSidebarView from './index';
 import MockWebStorage from 'mock-webstorage';
 import GmailThreadView from '../gmail-thread-view';
 import GmailElementGetter from '../../gmail-element-getter';
+import { GMAIL_SELECTORS } from '../../selectors';
 import SelectorRegistry from '../../../../lib/dom/selectorRegistry';
 import { type ContentPanelDescriptor } from '../../../../driver-common/sidebar/ContentPanelViewDriver';
 
@@ -112,7 +113,7 @@ describe('GmailAppSidebarView Primary', function () {
 
 function makeDriver(appId?: string, opts?: any): any {
   const driver: any = {
-    selectors: new SelectorRegistry(),
+    selectors: new SelectorRegistry(GMAIL_SELECTORS),
     getAppId: () => appId || 'test',
     getOpts: () =>
       opts || {

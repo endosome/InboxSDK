@@ -1,17 +1,17 @@
-import {
-  GMAIL_SELECTORS,
-  type SelectorCandidates,
-  type SelectorKey,
-  type SelectorOverrides,
-} from '../../dom-driver/gmail/selectors';
 import mergeSelectorOverrides, {
   type InvalidSelectorReporter,
 } from './mergeSelectorOverrides';
 import { SelectorError } from './querySelectorOrFail';
 
-export type SelectorRegistryOptions = {
+/** An ORDERED candidate list per key; the first rung that matches wins. */
+export type SelectorCandidates<K extends string = string> = Record<
+  K,
+  readonly string[]
+>;
+
+export type SelectorRegistryOptions<K extends string = string> = {
   /** Additional selector candidates to PREPEND to the SDK bundled defaults. */
-  overrides?: SelectorOverrides;
+  overrides?: Partial<Record<K, readonly string[]>>;
   /** Fires for each override candidate dropped as invalid CSS in THIS browser. */
   onInvalidSelector?: InvalidSelectorReporter;
 };
@@ -21,35 +21,34 @@ export type SelectorRegistryOptions = {
  * selectors. If there are any errors merging the overrides, we fallback
  * to the SDK bundled defaults.
  */
-function mergeOrFallBack({
-  overrides,
-  onInvalidSelector,
-}: SelectorRegistryOptions): SelectorCandidates {
+function mergeOrFallBack<K extends string>(
+  defaults: SelectorCandidates<K>,
+  { overrides, onInvalidSelector }: SelectorRegistryOptions<K>,
+): SelectorCandidates<K> {
   if (!overrides) {
-    return GMAIL_SELECTORS;
+    return defaults;
   }
 
   try {
-    return mergeSelectorOverrides(
-      GMAIL_SELECTORS,
-      overrides,
-      onInvalidSelector,
-    );
+    return mergeSelectorOverrides(defaults, overrides, onInvalidSelector);
   } catch {
-    return GMAIL_SELECTORS;
+    return defaults;
   }
 }
 
 /**
  * Resolves named keys to elements, trying each of the key's candidates in
- * order. Owned by the GmailDriver, so each InboxSDK instance resolves against
- * its own candidates and a registry is never read before it is built.
+ * order. Owned by the driver, so each SDK instance resolves against its own
+ * candidates and a registry is never read before it is built.
  */
-export default class SelectorRegistry {
-  readonly #candidates: SelectorCandidates;
+export default class SelectorRegistry<K extends string = string> {
+  readonly #candidates: SelectorCandidates<K>;
 
-  constructor(options: SelectorRegistryOptions = {}) {
-    this.#candidates = mergeOrFallBack(options);
+  constructor(
+    defaults: SelectorCandidates<K>,
+    options: SelectorRegistryOptions<K> = {},
+  ) {
+    this.#candidates = mergeOrFallBack(defaults, options);
   }
 
   /**
@@ -59,7 +58,7 @@ export default class SelectorRegistry {
    */
   querySelectorByKey(
     el: Document | DocumentFragment | Element,
-    key: SelectorKey,
+    key: K,
   ): HTMLElement | null {
     // Try each candidate in order, returning the first match (null otherwise).
     for (const candidateSelector of this.#candidates[key]) {
@@ -77,7 +76,7 @@ export default class SelectorRegistry {
    */
   querySelectorAllByKey(
     el: Document | DocumentFragment | Element,
-    key: SelectorKey,
+    key: K,
   ): HTMLElement[] {
     for (const candidateSelector of this.#candidates[key]) {
       const found = el.querySelectorAll<HTMLElement>(candidateSelector);
@@ -94,7 +93,7 @@ export default class SelectorRegistry {
    */
   querySelectorByKeyOrFail(
     el: Document | DocumentFragment | Element,
-    key: SelectorKey,
+    key: K,
   ): HTMLElement {
     const found = this.querySelectorByKey(el, key);
     if (!found) {

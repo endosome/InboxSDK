@@ -1,6 +1,6 @@
 import remove from 'lodash/remove';
 import asap from 'asap';
-import Logger from './logger';
+import { reportError } from './reporter';
 
 export type Handler<T> = (target: T) => void | Promise<void>;
 
@@ -78,6 +78,6 @@ function _tryCatch<T>(fn: (arg: T) => void, arg: T) {
   try {
     fn(arg);
   } catch (err) {
-    Logger.error(err);
+    reportError(err);
   }
 }

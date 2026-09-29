@@ -1,3 +1,4 @@
+import { GMAIL_SELECTORS } from '../selectors';
 import SelectorRegistry from '../../../lib/dom/selectorRegistry';
 import type GmailDriver from '../gmail-driver';
 import type { SelectorOverrides } from '../selectors';
@@ -16,7 +17,7 @@ function makeToolbarView(
   const view = Object.create(GmailToolbarView.prototype) as GmailToolbarView;
   view._element = element;
   view._driver = {
-    selectors: new SelectorRegistry({ overrides }),
+    selectors: new SelectorRegistry(GMAIL_SELECTORS, { overrides }),
   } as GmailDriver;
 
   return { element, view };

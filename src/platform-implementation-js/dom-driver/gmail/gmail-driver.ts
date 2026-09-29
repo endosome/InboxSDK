@@ -112,6 +112,7 @@ import type {
 import isNotNil from '../../../common/isNotNil';
 import censorHTMLtree from '../../../common/censorHTMLtree';
 import SelectorRegistry from '../../lib/dom/selectorRegistry';
+import { GMAIL_SELECTORS } from './selectors';
 
 /**
  * @internal
@@ -187,7 +188,7 @@ class GmailDriver {
     this.#logger = logger;
     this.#opts = opts;
     this.#envData = envData;
-    this.selectors = new SelectorRegistry({
+    this.selectors = new SelectorRegistry(GMAIL_SELECTORS, {
       overrides: opts.selectorOverrides,
       onInvalidSelector: opts.onInvalidSelector,
     });

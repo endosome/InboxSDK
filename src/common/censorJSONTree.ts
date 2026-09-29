@@ -1,19 +1,10 @@
-import once from 'lodash/once';
-import isStreakAppId from '../platform-implementation-js/lib/isStreakAppId';
-
-const hasStreakInstalled = once(() => {
-  const appIds = JSON.parse(
-    (typeof document !== 'undefined' &&
-      document.documentElement.getAttribute('data-inboxsdk-active-app-ids')) ||
-      '[]',
-  );
-  return appIds.find(({ appId }: any) => isStreakAppId(appId));
-});
-
+/**
+ * JSON-stringifies `object` with every string longer than 10 characters
+ * replaced by `...`, so the result can be shared without leaking content.
+ */
 export default function censorJSONTree(object: any): string {
   return JSON.stringify(object, (key, value) => {
     if (typeof value !== 'string' || value.length <= 10) return value;
-
-    return hasStreakInstalled() ? `${value.substring(0, 10)}...` : '...';
+    return '...';
   });
 }

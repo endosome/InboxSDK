@@ -1,100 +1,107 @@
-import {
-  GMAIL_SELECTORS,
-  type SelectorKey,
-} from '../../dom-driver/gmail/selectors';
 import SelectorRegistry from './selectorRegistry';
 
-/** A compose root whose title-bar table carries the `Ht` token, or not. */
-function composeRoot(withHt: boolean): HTMLElement {
+/**
+ * Synthetic table. Order matters: the `strict` rung matches a subset of the
+ * loose one, so it must come first.
+ */
+const TABLE = {
+  'widget.titleTable': ['.root table.tbl.strict', '.root table.tbl'],
+  'widget.titleCell': [
+    '.root table.tbl.strict td.cell',
+    '.root table.tbl td.cell',
+  ],
+} as const;
+type Key = keyof typeof TABLE;
+
+/** A widget root whose table carries the `strict` token, or not. */
+function widgetRoot(withStrict: boolean): HTMLElement {
   const root = document.createElement('div');
-  root.className = 'nH Hy aXJ';
+  root.className = 'root';
   root.innerHTML = `
-    <table class="cf${withHt ? ' Ht' : ''}">
-      <tbody><tr><td class="Hm"></td></tr></tbody>
+    <table class="tbl${withStrict ? ' strict' : ''}">
+      <tbody><tr><td class="cell"></td></tr></tbody>
     </table>`;
   return root;
 }
 
 test('a mistyped key is rejected at compile time', () => {
-  // @ts-expect-error — 'THIS_SELECTOR_DOES_NOT_EXIST' is not a key in GMAIL_SELECTORS
-  const mistyped: SelectorKey = 'composeView.THIS_SELECTOR_DOES_NOT_EXIST';
+  // @ts-expect-error — 'THIS_SELECTOR_DOES_NOT_EXIST' is not a key in TABLE
+  const mistyped: Key = 'widget.THIS_SELECTOR_DOES_NOT_EXIST';
 
-  expect(mistyped in GMAIL_SELECTORS).toBe(false);
+  expect(mistyped in TABLE).toBe(false);
 });
 
 // No overrides is what most users run.
 describe('with no config loaded', () => {
   test('a key resolves through the bundled chain', () => {
-    const registry = new SelectorRegistry();
-    const root = composeRoot(true);
+    const registry = new SelectorRegistry(TABLE);
+    const root = widgetRoot(true);
 
-    expect(registry.querySelectorByKey(root, 'composeView.titleBarTable')).toBe(
+    expect(registry.querySelectorByKey(root, 'widget.titleTable')).toBe(
       root.querySelector('table'),
     );
-    expect(registry.querySelectorByKey(root, 'composeView.titleBarTd')).toBe(
+    expect(registry.querySelectorByKey(root, 'widget.titleCell')).toBe(
       root.querySelector('td'),
     );
   });
 
   test('a later rung catches what the first one misses', () => {
-    const registry = new SelectorRegistry();
-    const root = composeRoot(false);
+    const registry = new SelectorRegistry(TABLE);
+    const root = widgetRoot(false);
 
-    expect(registry.querySelectorByKey(root, 'composeView.titleBarTable')).toBe(
+    expect(registry.querySelectorByKey(root, 'widget.titleTable')).toBe(
       root.querySelector('table'),
     );
   });
 
   test('querySelectorAllByKey returns every match of the first rung that hits', () => {
-    const registry = new SelectorRegistry();
+    const registry = new SelectorRegistry(TABLE);
     const root = document.createElement('div');
-    root.append(composeRoot(true), composeRoot(true), composeRoot(false));
+    root.append(widgetRoot(true), widgetRoot(true), widgetRoot(false));
 
-    // Both `Ht` tables come from the first rung; the `Ht`-less one is left out.
+    // Both `strict` tables come from the first rung; the `strict`-less one is left out.
+    expect(registry.querySelectorAllByKey(root, 'widget.titleTable')).toEqual(
+      Array.from(root.querySelectorAll('table.strict')),
+    );
     expect(
-      registry.querySelectorAllByKey(root, 'composeView.titleBarTable'),
-    ).toEqual(Array.from(root.querySelectorAll('table.Ht')));
-    expect(
-      registry.querySelectorAllByKey(root, 'composeView.titleBarTd'),
+      registry.querySelectorAllByKey(root, 'widget.titleCell'),
     ).toHaveLength(2);
     expect(
       registry.querySelectorAllByKey(
         document.createElement('div'),
-        'composeView.titleBarTable',
+        'widget.titleTable',
       ),
     ).toEqual([]);
   });
 
   test('candidates are tried in LIST order, not document order', () => {
-    const registry = new SelectorRegistry();
+    const registry = new SelectorRegistry(TABLE);
     const root = document.createElement('div');
-    root.append(composeRoot(false), composeRoot(true));
+    root.append(widgetRoot(false), widgetRoot(true));
 
-    // The `Ht`-less table comes first in the document, but its rung is second.
-    expect(registry.querySelectorByKey(root, 'composeView.titleBarTable')).toBe(
+    // The `strict`-less table comes first in the document, but its rung is second.
+    expect(registry.querySelectorByKey(root, 'widget.titleTable')).toBe(
       root.querySelectorAll('table')[1],
     );
   });
 
   test('a total miss is null, or a throw naming the key', () => {
-    const registry = new SelectorRegistry();
+    const registry = new SelectorRegistry(TABLE);
     const empty = document.createElement('div');
 
-    expect(
-      registry.querySelectorByKey(empty, 'composeView.titleBarTable'),
-    ).toBe(null);
+    expect(registry.querySelectorByKey(empty, 'widget.titleTable')).toBe(null);
     expect(() =>
-      registry.querySelectorByKeyOrFail(empty, 'composeView.titleBarTable'),
-    ).toThrow('composeView.titleBarTable');
+      registry.querySelectorByKeyOrFail(empty, 'widget.titleTable'),
+    ).toThrow('widget.titleTable');
   });
 });
 
 describe('with a config loaded', () => {
   test('an empty config is indistinguishable from no config', () => {
-    const registry = new SelectorRegistry({ overrides: {} });
-    const root = composeRoot(true);
+    const registry = new SelectorRegistry(TABLE, { overrides: {} });
+    const root = widgetRoot(true);
 
-    expect(registry.querySelectorByKey(root, 'composeView.titleBarTable')).toBe(
+    expect(registry.querySelectorByKey(root, 'widget.titleTable')).toBe(
       root.querySelector('table'),
     );
   });
@@ -104,56 +111,53 @@ describe('with a config loaded', () => {
     root.innerHTML = '<table class="brand-new"></table>';
 
     expect(
-      new SelectorRegistry().querySelectorByKey(
-        root,
-        'composeView.titleBarTable',
-      ),
+      new SelectorRegistry(TABLE).querySelectorByKey(root, 'widget.titleTable'),
     ).toBe(null);
 
-    const registry = new SelectorRegistry({
-      overrides: { 'composeView.titleBarTable': ['table.brand-new'] },
+    const registry = new SelectorRegistry(TABLE, {
+      overrides: { 'widget.titleTable': ['table.brand-new'] },
     });
 
-    expect(registry.querySelectorByKey(root, 'composeView.titleBarTable')).toBe(
+    expect(registry.querySelectorByKey(root, 'widget.titleTable')).toBe(
       root.querySelector('table'),
     );
   });
 
   test('an override that matches nothing cannot break the bundled chain', () => {
-    const registry = new SelectorRegistry({
-      overrides: { 'composeView.titleBarTable': ['table.matches-nothing'] },
+    const registry = new SelectorRegistry(TABLE, {
+      overrides: { 'widget.titleTable': ['table.matches-nothing'] },
     });
-    const root = composeRoot(true);
+    const root = widgetRoot(true);
 
-    expect(registry.querySelectorByKey(root, 'composeView.titleBarTable')).toBe(
+    expect(registry.querySelectorByKey(root, 'widget.titleTable')).toBe(
       root.querySelector('table'),
     );
   });
 
   test('an unparseable override is dropped, reported, and inert', () => {
     const onInvalidSelector = jest.fn();
-    const registry = new SelectorRegistry({
-      overrides: { 'composeView.titleBarTable': ['table['] },
+    const registry = new SelectorRegistry(TABLE, {
+      overrides: { 'widget.titleTable': ['table['] },
       onInvalidSelector,
     });
-    const root = composeRoot(true);
+    const root = widgetRoot(true);
 
     expect(onInvalidSelector).toHaveBeenCalledWith(
-      'composeView.titleBarTable',
+      'widget.titleTable',
       'table[',
     );
-    expect(registry.querySelectorByKey(root, 'composeView.titleBarTable')).toBe(
+    expect(registry.querySelectorByKey(root, 'widget.titleTable')).toBe(
       root.querySelector('table'),
     );
   });
 
   test('a key from a newer config is a no-op', () => {
-    const registry = new SelectorRegistry({
-      overrides: { 'composeView.fromTheFuture': ['.x'] } as never,
+    const registry = new SelectorRegistry(TABLE, {
+      overrides: { 'widget.fromTheFuture': ['.x'] } as never,
     });
-    const root = composeRoot(true);
+    const root = widgetRoot(true);
 
-    expect(registry.querySelectorByKey(root, 'composeView.titleBarTable')).toBe(
+    expect(registry.querySelectorByKey(root, 'widget.titleTable')).toBe(
       root.querySelector('table'),
     );
   });
@@ -162,16 +166,16 @@ describe('with a config loaded', () => {
     const root = document.createElement('div');
     root.innerHTML = '<table class="brand-new"></table>';
 
-    const withOverrides = new SelectorRegistry({
-      overrides: { 'composeView.titleBarTable': ['table.brand-new'] },
+    const withOverrides = new SelectorRegistry(TABLE, {
+      overrides: { 'widget.titleTable': ['table.brand-new'] },
     });
-    const withoutOverrides = new SelectorRegistry();
+    const withoutOverrides = new SelectorRegistry(TABLE);
 
-    expect(
-      withOverrides.querySelectorByKey(root, 'composeView.titleBarTable'),
-    ).toBe(root.querySelector('table'));
-    expect(
-      withoutOverrides.querySelectorByKey(root, 'composeView.titleBarTable'),
-    ).toBe(null);
+    expect(withOverrides.querySelectorByKey(root, 'widget.titleTable')).toBe(
+      root.querySelector('table'),
+    );
+    expect(withoutOverrides.querySelectorByKey(root, 'widget.titleTable')).toBe(
+      null,
+    );
   });
 });

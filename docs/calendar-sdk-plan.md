@@ -652,12 +652,41 @@ not navigate to `/r/eventedit` (no editor view); birthdays have no Edit. _Not
 covered:_ Workspace calendars, non-English locales, editor for a shared-calendar
 event without write access. _Exit met:_ view created/destroyed with the route.
 
-**Phase 8 — Compatibility infrastructure (parallel).** _Goal:_ detect Google
-changes before users do. _Code:_ `compat/` library shared by the CDP runner and
-`sdk.Compat`, structure-hash baselines, scheduled runner. _Deliverables:_
-nightly report + issue filing. _Tests:_ a deliberately broken selector produces
-a hard failure. _Risks:_ ToS for automation, signed-in profile upkeep. _Exit:_
-nightly job green for a week; broken-selector drill passes.
+**Phase 8 — Compatibility infrastructure. IMPLEMENTED on branch
+`calendar-sdk-phase8`; the exit criterion "nightly job green for a week" is
+still pending (needs the schedule to run for a week).** _Goal:_ detect Google
+changes before users do. _Code:_ `src/platform-implementation-js/compat/`
+(`checks.ts` — selector-registry checks with contexts, canaries and optional
+keys; `structure.ts` — structural fingerprints), `services/compat-service`,
+`sdk.Compat` (`getReport()`, `onIssue()`, `load({ onCompatIssue })`; local only,
+nothing is sent), and `tools/calendar-probe/compat-runner.mjs`, which bundles
+the **same** `checks.ts` with esbuild and injects it over CDP into week, month,
+day, agenda, an open popover, the editor and settings. _How a check decides:_ a
+key is checked only in the page state where it must exist (route type from
+`body[data-viewkey]`; popovers are detected by evidence, not by the registry
+that may be broken). Preferred rung matches = ok; a later rung =
+`selector-fallback` (warning); no rung matches while independent evidence says
+the element is there (e.g. `[role=main] [data-eventid]` for chips) or the key
+has no canary = `selector-miss` (**hard**); an empty week is "unverified", not a
+failure; optional keys (Edit/Delete on read-only events) never fail. Also
+`identity-decode-failed` (chips whose `data-eventid` does not decode; hard if
+all) and `structure-drift:<landmark>` (warning) against
+`tools/calendar-probe/baselines/structure.json` — fingerprints hold tag and
+attribute _names_ only (no text, no values), so nothing user-owned is in a
+report or the baseline. _Deliverables:_ `out/compat-report.{json,md}`,
+`--issue-dry-run` writes the issue text (**nothing is filed or sent**),
+`compat-nightly.sh` (dated copies in `out/history/`; scheduling it is the
+owner's call). _Tests:_ 19 jest tests incl. the **broken-selector drill** in
+jsdom, and live `--drill` (the runner replaces the `eventChip` chain — selector
+_overrides_ only prepend, so they cannot break a check — and requires a hard
+failure: passes, 5 scenarios flagged); `extension-compat.mjs` (18 checks): the
+in-page `sdk.Compat` on week/popover/editor gives no issues, emits nothing on a
+healthy page, and its fingerprints equal the baseline the CDP runner wrote (same
+code, same result). Two consecutive live runs: 0 hard, 0 warning, no drift.
+_Risks / open:_ ToS for automation and upkeep of the signed-in profile (owner);
+baseline covers `en`, ui-kind 10, one account — other variants need their own
+baselines; issue filing and the scheduled job are deliberately not wired up.
+_Exit:_ drill passes (met); nightly green for a week (pending).
 
 ## 13. Risks
 

@@ -13,6 +13,8 @@ import EventEditorView from './views/event-editor-view';
 import EventPopoverView from './views/event-popover-view';
 import RouteView from './views/route-view/route-view';
 import EventView from './views/event-view';
+import Compat from './namespaces/compat';
+import type { CompatIssue } from './compat/types';
 import Events from './namespaces/events';
 import Router from './namespaces/router';
 import User from './namespaces/user';
@@ -31,6 +33,8 @@ export type PiOpts = {
   selectorOverrides?: SelectorOverrides;
   /** Fires for each override candidate dropped as invalid CSS in this browser. */
   onInvalidSelector?: InvalidSelectorReporter;
+  /** Called for each selector/identity problem found by the local self-check. */
+  onCompatIssue?: (issue: CompatIssue) => void;
   /** Where diagnostics go; defaults to the console. Nothing is sent anywhere. */
   reporter?: Reporter;
   /** How long to wait for Calendar to render before load() rejects (default 15000). */
@@ -47,6 +51,7 @@ export class PlatformImplementation extends SafeEventEmitter {
   readonly Events: Events;
   readonly Router: Router;
   readonly User: User;
+  readonly Compat: Compat;
   readonly #driver: Driver;
 
   constructor(driver: Driver, opts: PiOpts) {
@@ -66,7 +71,9 @@ export class PlatformImplementation extends SafeEventEmitter {
     this.Events = new Events(driver, membrane);
     this.Router = new Router(driver, membrane);
     this.User = new User(driver);
-    // Toolbar and Compat are added in later phases.
+    this.Compat = new Compat(driver);
+    if (opts.onCompatIssue) this.Compat.onIssue(opts.onCompatIssue);
+    // Toolbar is added in a later phase.
   }
 
   destroy() {

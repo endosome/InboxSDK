@@ -2,6 +2,7 @@ import type { Stopper } from 'kefir-stopper';
 import type { RouteViewDriver } from './route-view-driver';
 import type { EventViewDriver } from './event-view-driver';
 import type { EventPopoverViewDriver } from './event-popover-view-driver';
+import type { CompatIssue, CompatReport } from '../compat/types';
 import type { EventEditorViewDriver } from './event-editor-view-driver';
 
 export type UserInfo = {
@@ -49,5 +50,9 @@ export interface Driver {
   onEventEditorViewDriver(
     cb: (driver: EventEditorViewDriver) => void,
   ): () => void;
+  /** Check the page against the selector registry now. */
+  getCompatReport(): CompatReport;
+  /** Called for each newly found problem. Returns an unsubscribe function. */
+  onCompatIssue(cb: (issue: CompatIssue) => void): () => void;
   destroy(): void;
 }

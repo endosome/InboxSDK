@@ -14,6 +14,41 @@ export interface AppLogger {
   event(name: string, details?: any): void;
 }
 
+/** A problem found by the self-check. Never contains titles, ids or emails. */
+export interface CompatIssue {
+  severity: 'hard' | 'warning' | 'info';
+  /** e.g. `selector-miss`, `selector-fallback`, `identity-decode-failed`, `structure-drift:<landmark>`. */
+  check: string;
+  selectorKey?: string;
+  /** Index of the selector candidate that matched (0 = preferred). */
+  rungIndex?: number;
+  count?: number;
+}
+
+export interface CompatSelectorResult {
+  key: string;
+  status: 'ok' | 'fallback' | 'miss' | 'unverified' | 'inactive';
+  rungIndex: number | null;
+  count: number;
+}
+
+export interface CompatReport {
+  /** `<lang>/<ui-kind>/<view key>` of the page that was checked. */
+  variant: string;
+  checkedAt: string;
+  issues: CompatIssue[];
+  selectors: CompatSelectorResult[];
+  /** Structural fingerprints (tag and attribute names only) by landmark. */
+  structure: Record<string, string>;
+}
+
+/** Local health check of the SDK's selectors against the running Calendar. Sends nothing. */
+export interface Compat {
+  getReport(): CompatReport;
+  /** Called once per problem (shortly after load, after route changes); returns an unregister function. */
+  onIssue(handler: (issue: CompatIssue) => void): () => void;
+}
+
 export interface LoadOptions {
   /** Opaque namespace for your extension. */
   appId: string;
@@ -21,6 +56,8 @@ export interface LoadOptions {
   selectorOverrides?: Record<string, readonly string[]>;
   /** Called for each override selector dropped as invalid CSS in this browser. */
   onInvalidSelector?: (key: string, selector: string) => void;
+  /** Called for each problem the local self-check finds (see `Compat`). */
+  onCompatIssue?: (issue: CompatIssue) => void;
   /** Receives SDK diagnostics; defaults to the console. Nothing is sent anywhere. */
   reporter?: Reporter;
   /** How long to wait for Calendar to render before load() rejects (default 15000). */
@@ -185,6 +222,7 @@ export interface CalendarSDK {
   readonly Events: Events;
   readonly Router: Router;
   readonly User: User;
+  readonly Compat: Compat;
   readonly LOADER_VERSION: string;
   readonly IMPL_VERSION: string;
   readonly Logger: AppLogger;

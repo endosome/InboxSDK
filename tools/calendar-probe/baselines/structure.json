@@ -1,0 +1,41 @@
+{
+  "variants": {
+    "week": "en/10/WEEK",
+    "month": "en/10/MONTH",
+    "day": "en/10/DAY",
+    "agenda": "en/10/AGENDA",
+    "popover": "en/10/WEEK",
+    "editor": "en/10/EVENTEDIT",
+    "settings": "en/10/GENERALSETTINGS"
+  },
+  "structures": {
+    "week": {
+      "eventChip": "1812ccba",
+      "appHeader": "a9b7123a"
+    },
+    "month": {
+      "eventChip": "1812ccba",
+      "appHeader": "a9b7123a"
+    },
+    "day": {
+      "eventChip": "1812ccba",
+      "appHeader": "a9b7123a"
+    },
+    "agenda": {
+      "eventChip": "b0fd6d01",
+      "appHeader": "a9b7123a"
+    },
+    "popover": {
+      "eventChip": "1812ccba",
+      "popover": "8916d9e3",
+      "appHeader": "a9b7123a"
+    },
+    "editor": {
+      "appHeader": "a9b7123a",
+      "editorMain": "27a9f6e8"
+    },
+    "settings": {
+      "appHeader": "a9b7123a"
+    }
+  }
+}

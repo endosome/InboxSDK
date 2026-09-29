@@ -210,3 +210,18 @@ stable), network canary, structure-hash diffs.
    keep runner and docs mutually checking.
 5. Scripts print account identifiers; sanitise before committing anything from
    `out/` (git-ignored).
+
+## Automated runner (Phase 8)
+
+`tools/calendar-probe/compat-runner.mjs` is the automated form of this document:
+it injects the SDK's own `compat/checks.ts` (the code `sdk.Compat` runs in a
+page) into a signed-in test Chrome over CDP and checks every selector key in the
+page state where it must exist, identity decoding of every chip, and structural
+fingerprints against a committed baseline. See the plan's Phase 8 for the check
+semantics. `--drill` proves the runner fails when a selector chain is broken.
+Run it nightly with `tools/calendar-probe/compat-nightly.sh` (reports in
+`tools/calendar-probe/out/history/`); a red run means: read
+`out/compat-report.md`, find the changed markup with the `experiments/` scripts,
+prepend/replace the selector in `selectors.ts` and re-run. After an intentional,
+reviewed Calendar change, refresh the fingerprints with `--update-baseline` and
+commit the diff.

@@ -17,6 +17,8 @@ import {
 import RouteService from './services/route-service';
 import EventRegistry from './services/event-registry';
 import InjectionReconciler from './services/injection-reconciler';
+import CompatService from './services/compat-service';
+import type { CompatIssue, CompatReport } from '../../compat/types';
 import EditorService from './services/editor-service';
 import PopoverRegistry from './services/popover-registry';
 import { readUserInfo } from './services/user-info';
@@ -45,6 +47,7 @@ export default class CalendarDriver implements Driver {
   #reconciler: InjectionReconciler | null = null;
   #popoverRegistry: PopoverRegistry | null = null;
   #editorService: EditorService | null = null;
+  #compatService: CompatService | null = null;
   #destroyed = false;
 
   constructor(appId: string, options: CalendarDriverOptions = {}) {
@@ -115,6 +118,8 @@ export default class CalendarDriver implements Driver {
       this.selectors,
     );
     this.#editorService.start();
+    this.#compatService = new CompatService(document, this.selectors);
+    this.#compatService.start(this.#routeService);
   }
 
   getAppId(): string {
@@ -174,8 +179,19 @@ export default class CalendarDriver implements Driver {
     return this.#editorService.subscribe(cb);
   }
 
+  getCompatReport(): CompatReport {
+    if (!this.#compatService) throw new Error('CalendarDriver is not ready');
+    return this.#compatService.getReport();
+  }
+
+  onCompatIssue(cb: (issue: CompatIssue) => void): () => void {
+    if (!this.#compatService) throw new Error('CalendarDriver is not ready');
+    return this.#compatService.onIssue(cb);
+  }
+
   destroy(): void {
     this.#destroyed = true;
+    this.#compatService?.stop();
     this.#editorService?.stop();
     this.#popoverRegistry?.stop();
     this.#reconciler?.stop();

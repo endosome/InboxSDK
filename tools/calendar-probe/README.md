@@ -25,3 +25,13 @@ Branded Chrome ignores `--load-extension`. Start Chrome with
 `--enable-unsafe-extension-debugging` and load extensions over CDP
 (`Extensions.loadUnpacked`), as `experiments/extension-smoke.mjs` and
 `experiments/extension-routes.mjs` do (run `yarn gulp` first).
+
+## Compat runner (Phase 8)
+
+`compat-runner.mjs` runs the SDK's own compat checks (bundled with esbuild) in
+the main views, a popover and the editor of the signed-in test Chrome, compares
+structure fingerprints with `baselines/structure.json` and writes
+`out/compat-report.{json,md}`. Flags: `--update-baseline`, `--drill`
+(broken-selector drill), `--issue-dry-run` (writes issue text; files nothing).
+`compat-nightly.sh` wraps it for cron and keeps dated copies. Needs the
+`[CALSDK]` fixtures (`seed.mjs`) and read-only access only.

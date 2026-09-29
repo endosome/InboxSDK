@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "CalendarSDK compat example",
+  "version": "0.0.1",
+  "description": "Logs the SDK self-check (sdk.Compat) report and issues on Google Calendar.",
+  "content_scripts": [
+    {
+      "matches": ["https://calendar.google.com/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}

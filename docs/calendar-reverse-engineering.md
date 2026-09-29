@@ -907,3 +907,18 @@ Calendar's popover state — both happen without any SDK.
 - Save with no dialog returns to the grid (`/r`, WEEK) and ends the route.
 - A task popover's "Edit" does not navigate to `/r/eventedit` (URL unchanged);
   birthdays have no Edit.
+
+### 1.21 Locales, narrow windows, browser time zone [V: `extension-locales.mjs`, `extension-coverage.mjs`, `extension-timezone.mjs`]
+
+- `?hl=de|pl|ja|zh-CN|ar|he` localizes the UI (`html[lang]`, `dir=rtl` for `ar`
+  and `he`); `body[data-viewkey]`, `[role=main]`, chip attributes, popover
+  discriminator and the editor ids (`#xTiIn`, `#xSaveBu`, `#xCancelBu`) are
+  identical, so none of the aria-label fallback rungs was needed.
+- Windows of 700 px and 420 px keep the same structure (23 chips, `[role=main]`,
+  header); popovers are the same dialogs.
+- Changing the **browser** zone under a running page (CDP override) does not
+  move the grid: Calendar renders in the account's zone (`#xTimezone`). Identity
+  (`data-eventid`, instance suffix = original UTC start) is unaffected.
+- Month view with the fixtures shows 15 events, 1 task, 1 birthday; the task and
+  birthday chips are ordinary `[data-eventchip]` elements with `ttb_`/`bday_`
+  ids and get badges like events.

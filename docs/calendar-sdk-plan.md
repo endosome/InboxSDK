@@ -388,7 +388,7 @@ Hundreds of chips → O(added) per frame. The observer does not observe `style`
 attributes (chips restyle continuously while dragging). Popover/dialog changes
 arrive through the same observer (overlay host is inside `body`). Never
 hard-code pixel geometry: density changes chip height 38/46/58 px (RE §1.17).
-Open: scale test at ≥300 chips (§15).
+Live scale test at 320 chips passed (§12 coverage note).
 
 ## 8. Routing
 
@@ -700,19 +700,37 @@ retries. The core exposes it as `sdk.Data.getEvent/listCalendars` and
 `CALSDK_TEST_TOKEN` (prints booleans and id shapes only). Until it has run,
 "instance ids of the form `<id>_<UTC start>` match the API" stays **[H]**.
 
+**Coverage pass (after Phase 8).** Live, real Chrome, several SDK instances
+loaded side by side (`extension-coverage.mjs`, `extension-locales.mjs`,
+`extension-timezone.mjs`): _scale_ — 320 synthetic chip clones in the live month
+view are all badged within one frame (358 ms incl. insertion, no long task),
+remove/re-add churn leaves exactly one badge per chip, removing the clones
+leaves the real chips as before, popovers still work; _narrow windows_ (700 px
+and 420 px) keep the same DOM (`[role=main]`, header, 23 chips), badges, popover
+button and compat report unchanged; _task and birthday chips_ are badged when
+the app registers those kinds; _locales_ `de pl ja zh-CN ar he` (RTL `ar`/`he`):
+UI really localized, route WEEK, one badge per chip, popover button with the
+right ref, editor by URL with `#xTiIn` found, compat report clean (no locale
+fallback rung needed); _time zone changed while running_ (CDP override, no
+reload): chips, badges, popover and compat unaffected and the recurring
+instance's `EventRef` is identical (UTC-based) — Calendar renders in the
+_account's_ zone, so grid labels do not move with the browser zone;
+`User.getTimeZone()` is the load-time account zone by design. _Still not
+covered:_ hundreds of _real_ events, Workspace, other input methods.
+
 ## 13. Risks
 
-| Risk                                              | Mitigation                                                                                                                       |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Google changes `data-eventid` encoding / `jslog`  | compat check "identity decode 14/14" is a hard failure; network verifier canary; `rawId` always exposed so deep links still work |
-| Grid re-render strips injected DOM                | reconciler + overlay spike; test pins behaviour                                                                                  |
-| Id-after-insert / possible reuse ⇒ wrong-event UI | view = (element,id) created on first id; id-change ⇒ new view; tested by attribute-mutation fixtures                             |
-| Google UI experiments per account                 | variant fingerprints + multi-account CI matrix (needs ≥2 account types)                                                          |
-| Test-account lockouts / captcha on automation     | human-signed-in persistent profile over CDP; never store credentials; low-frequency runs                                         |
-| Chrome Web Store policy re remote code            | none loaded; declarative overrides only                                                                                          |
-| Navigation API absent in Firefox/Safari           | fallback path; Chromium-first support statement                                                                                  |
-| Terms of service for automating Calendar          | dedicated test accounts, read-mostly, low frequency; review before scheduled CI                                                  |
-| Verified only on 2 consumer accounts, `en`/`de`   | Workspace pass + RTL/CJK locales are Phase 0/2 exit criteria; per-feature graceful failure limits blast radius                   |
+| Risk                                                                                                | Mitigation                                                                                                                       |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Google changes `data-eventid` encoding / `jslog`                                                    | compat check "identity decode 14/14" is a hard failure; network verifier canary; `rawId` always exposed so deep links still work |
+| Grid re-render strips injected DOM                                                                  | reconciler + overlay spike; test pins behaviour                                                                                  |
+| Id-after-insert / possible reuse ⇒ wrong-event UI                                                   | view = (element,id) created on first id; id-change ⇒ new view; tested by attribute-mutation fixtures                             |
+| Google UI experiments per account                                                                   | variant fingerprints + multi-account CI matrix (needs ≥2 account types)                                                          |
+| Test-account lockouts / captcha on automation                                                       | human-signed-in persistent profile over CDP; never store credentials; low-frequency runs                                         |
+| Chrome Web Store policy re remote code                                                              | none loaded; declarative overrides only                                                                                          |
+| Navigation API absent in Firefox/Safari                                                             | fallback path; Chromium-first support statement                                                                                  |
+| Terms of service for automating Calendar                                                            | dedicated test accounts, read-mostly, low frequency; review before scheduled CI                                                  |
+| Verified only on 2 consumer accounts; UI languages `en`, `de`, `pl`, `ja`, `zh-CN`, `ar`, `he` pass | Workspace pass + RTL/CJK locales are Phase 0/2 exit criteria; per-feature graceful failure limits blast radius                   |
 
 ## 14. First engineering tasks (recommended order)
 
@@ -740,21 +758,21 @@ retries. The core exposes it as `sdk.Data.getEvent/listCalendars` and
 
 ## 15. Unknowns / experiments (summary; detail in RE log §9)
 
-| Unknown                                                                                                                                                                                                                               | Experiment                                                                                                          | Blocks                               |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| ~~Do isolated-world findings hold in a real MV3 content script?~~ **Answered (Phase 2)**: Navigation API, `#xUserInfo`, `body[data-viewkey]`, observers, extension-URL images hold; Trusted Types do **not** apply to content scripts | `extension-smoke.mjs`                                                                                               | —                                    |
-| Workspace custom-domain / resource calendar ids; other `data-ui-kind`                                                                                                                                                                 | Workspace test account                                                                                              | `calendarId` expansion, variants.ts  |
-| Behaviour at hundreds of chips (virtualisation, "+N more", observer cost) — **jsdom 500-chip batch passes; live ≥300 chips still open**                                                                                               | synthetic 300-event calendar; trace                                                                                 | Phase 5 perf                         |
-| ~~Rapid navigation leaks/duplicates~~ **Answered (Phase 3)**: 24 rapid Next/Previous clicks in real Chrome, `created − destroyed == live` and views == DOM chips                                                                      | `extension-events.mjs`                                                                                              | —                                    |
-| Timed → all-day drag gesture with real input                                                                                                                                                                                          | manual/headed run with real pointer                                                                                 | none (identity known via editor)     |
-| Delete of recurring instance / guest event; undo                                                                                                                                                                                      | delete fixtures, observe dialogs                                                                                    | Phase 3 lifecycle                    |
-| Narrow window / mobile layout, RTL & CJK locales, non-Gregorian                                                                                                                                                                       | resize + `?hl=ar/he/ja` pass                                                                                        | selector ranking                     |
-| ~~Extension-URL images under page CSP~~ **Answered**: load fine (real content script)                                                                                                                                                 | `extension-smoke.mjs`, `extension-badges.mjs`                                                                       | —                                    |
-| `Router.goto` feasibility                                                                                                                                                                                                             | synthetic `pushState`+`popstate` in isolated world vs MAIN                                                          | LATER                                |
-| Event id position in network responses                                                                                                                                                                                                | capture range containing fixtures                                                                                   | canary only                          |
-| Firefox/Safari fallback path (no Navigation API)                                                                                                                                                                                      | smoke                                                                                                               | support matrix                       |
-| Calendar API leg of identity: does `events.get` accept `<id>_<UTC start>` instance ids and the `data-eventid` base id? **No API call has been made**                                                                                  | one authenticated `events.get`/`instances` call against the test account (requires an OAuth token — owner decision) | `dataProvider` correlation (Phase 4) |
-| Does `#xTimezone` track the primary-tz setting live or only at load?                                                                                                                                                                  | change primary tz in-app, re-read `#xTimezone` without reload                                                       | `User.getTimeZone()`                 |
+| Unknown                                                                                                                                                                                                                                                  | Experiment                                                                                                          | Blocks                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| ~~Do isolated-world findings hold in a real MV3 content script?~~ **Answered (Phase 2)**: Navigation API, `#xUserInfo`, `body[data-viewkey]`, observers, extension-URL images hold; Trusted Types do **not** apply to content scripts                    | `extension-smoke.mjs`                                                                                               | —                                    |
+| Workspace custom-domain / resource calendar ids; other `data-ui-kind`                                                                                                                                                                                    | Workspace test account                                                                                              | `calendarId` expansion, variants.ts  |
+| Behaviour at hundreds of chips (virtualisation, "+N more", observer cost) — **320 synthetic chips in the live month view: all badged in one frame, no long tasks, churn OK; real Calendar virtualisation with hundreds of real events still unobserved** | 300 real events would need seeding                                                                                  | done (synthetic)                     |
+| ~~Rapid navigation leaks/duplicates~~ **Answered (Phase 3)**: 24 rapid Next/Previous clicks in real Chrome, `created − destroyed == live` and views == DOM chips                                                                                         | `extension-events.mjs`                                                                                              | —                                    |
+| Timed → all-day drag gesture with real input                                                                                                                                                                                                             | manual/headed run with real pointer                                                                                 | none (identity known via editor)     |
+| Delete of recurring instance / guest event; undo                                                                                                                                                                                                         | delete fixtures, observe dialogs                                                                                    | Phase 3 lifecycle                    |
+| Narrow window / mobile layout, RTL & CJK locales, non-Gregorian                                                                                                                                                                                          | resize + `?hl=ar/he/ja` pass                                                                                        | selector ranking                     |
+| ~~Extension-URL images under page CSP~~ **Answered**: load fine (real content script)                                                                                                                                                                    | `extension-smoke.mjs`, `extension-badges.mjs`                                                                       | —                                    |
+| `Router.goto` feasibility                                                                                                                                                                                                                                | synthetic `pushState`+`popstate` in isolated world vs MAIN                                                          | LATER                                |
+| Event id position in network responses                                                                                                                                                                                                                   | capture range containing fixtures                                                                                   | canary only                          |
+| Firefox/Safari fallback path (no Navigation API)                                                                                                                                                                                                         | smoke                                                                                                               | support matrix                       |
+| Calendar API leg of identity: does `events.get` accept `<id>_<UTC start>` instance ids and the `data-eventid` base id? **No API call has been made**                                                                                                     | one authenticated `events.get`/`instances` call against the test account (requires an OAuth token — owner decision) | `dataProvider` correlation (Phase 4) |
+| Does `#xTimezone` track the primary-tz setting live or only at load?                                                                                                                                                                                     | change primary tz in-app, re-read `#xTimezone` without reload                                                       | `User.getTimeZone()`                 |
 
 ## 16. Project setup, packaging and support policy
 

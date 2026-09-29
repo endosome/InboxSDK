@@ -43,8 +43,7 @@ await p.evaluate(() => {
       (c) =>
         c.hasAttribute('jsaction') &&
         c.hasAttribute('data-keyboardactiontype') &&
-        c.getAttribute('data-eventid') &&
-        !/^(ttb_|bday_)/.test(c.getAttribute('data-eventid')),
+        c.getAttribute('data-eventid'),
     );
   const loop = () => {
     const g = window.__gap;
@@ -72,8 +71,7 @@ const state = () =>
       (c) =>
         c.hasAttribute('jsaction') &&
         c.hasAttribute('data-keyboardactiontype') &&
-        c.getAttribute('data-eventid') &&
-        !/^(ttb_|bday_)/.test(c.getAttribute('data-eventid')),
+        c.getAttribute('data-eventid'),
     );
     const perChip = chips.map(
       (c) => c.querySelectorAll('[data-calsdk-badge]').length,

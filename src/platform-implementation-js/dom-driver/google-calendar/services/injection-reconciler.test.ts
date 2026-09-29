@@ -384,3 +384,23 @@ test('stop() removes every injected node', () => {
   expect(() => h.views[0].addBadge({ text: 'late' })).not.toThrow();
   h.registry.stop();
 });
+
+test('updating a badge keeps its position among the others', () => {
+  const h = harness();
+  const chip = makeChip({ decoded: 'a owner@m' });
+  h.main.append(chip);
+  start(h);
+  const first = h.views[0].addBadge({ text: 'one' });
+  h.views[0].addBadge({ text: 'two' });
+  h.views[0].addBadge({ text: 'three' });
+
+  first.update({ text: 'ONE' });
+
+  expect([...badgesIn(chip)].map((n) => n.textContent)).toEqual([
+    'ONE',
+    'two',
+    'three',
+  ]);
+  h.registry.stop();
+  h.reconciler.stop();
+});

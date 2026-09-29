@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "CalendarSDK popover button example",
+  "version": "0.0.1",
+  "description": "Adds an 'Open in CRM' button to every event popover on Google Calendar.",
+  "content_scripts": [
+    {
+      "matches": ["https://calendar.google.com/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    { "resources": ["icon.png"], "matches": ["https://calendar.google.com/*"] }
+  ]
+}

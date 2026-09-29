@@ -187,12 +187,16 @@ export default class InjectionReconciler implements BadgeHost {
         chip.appendChild(container);
       }
 
-      for (const badge of view.badges) {
-        if (badge.node && badge.node.parentElement === container) continue;
-        badge.node?.remove();
-        badge.node = this.#buildBadge(badge);
-        container.appendChild(badge.node);
-      }
+      // keep DOM order == registration order, also after an update or a partial strip
+      view.badges.forEach((badge, i) => {
+        if (!badge.node || badge.node.parentElement !== container) {
+          badge.node?.remove();
+          badge.node = this.#buildBadge(badge);
+        }
+        if (container!.children[i] !== badge.node) {
+          container!.insertBefore(badge.node, container!.children[i] ?? null);
+        }
+      });
     } catch (err) {
       reportError(err);
     }

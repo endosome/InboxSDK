@@ -3,6 +3,7 @@ import type Membrane from '../lib/Membrane';
 import type { Driver } from '../driver-interfaces/driver';
 import type { EventKind } from '../driver-interfaces/event-view-driver';
 import type EventView from '../views/event-view';
+import type EventPopoverView from '../views/event-popover-view';
 
 export type EventViewHandlerOptions = {
   /** Which kinds of calendar items to be called for. Default: `['event']`. */
@@ -11,21 +12,49 @@ export type EventViewHandlerOptions = {
 
 const ALL_KINDS: EventKind[] = ['event', 'task', 'birthday', 'unknown'];
 
-export default class Events {
-  readonly #registries = new Map<EventKind, HandlerRegistry<EventView>>(
-    ALL_KINDS.map((kind) => [kind, new HandlerRegistry<EventView>()]),
+function makeRegistries<T>() {
+  return new Map<EventKind, HandlerRegistry<T>>(
+    ALL_KINDS.map((kind) => [kind, new HandlerRegistry<T>()]),
   );
+}
+
+function registerForKinds<T>(
+  registries: Map<EventKind, HandlerRegistry<T>>,
+  handler: (target: T) => void,
+  kinds: EventKind[] | undefined,
+): () => void {
+  const unregisters = [...new Set<EventKind>(kinds ?? ['event'])].map(
+    (kind) => {
+      const registry = registries.get(kind);
+      if (!registry) throw new Error(`Unknown event kind: ${String(kind)}`);
+      return registry.registerHandler(handler);
+    },
+  );
+  return () => unregisters.forEach((unregister) => unregister());
+}
+
+export default class Events {
+  readonly #viewRegistries = makeRegistries<EventView>();
+  readonly #popoverRegistries = makeRegistries<EventPopoverView>();
 
   constructor(driver: Driver, membrane: Membrane) {
-    const add = (viewDriver: Parameters<Membrane['get']>[0]) => {
+    const addView = (viewDriver: Parameters<Membrane['get']>[0]) => {
       const view = membrane.get(viewDriver) as EventView;
-      this.#registries.get(view.getEventRef().kind)?.addTarget(view);
+      this.#viewRegistries.get(view.getEventRef().kind)?.addTarget(view);
     };
-    driver.getEventViewDrivers().forEach(add);
-    const unsubscribe = driver.onEventViewDriver(add);
+    const addPopover = (popoverDriver: Parameters<Membrane['get']>[0]) => {
+      const view = membrane.get(popoverDriver) as EventPopoverView;
+      this.#popoverRegistries.get(view.getEventRef().kind)?.addTarget(view);
+    };
+    driver.getEventViewDrivers().forEach(addView);
+    driver.getEventPopoverViewDrivers().forEach(addPopover);
+    const unsubscribeViews = driver.onEventViewDriver(addView);
+    const unsubscribePopovers = driver.onEventPopoverViewDriver(addPopover);
     driver.getStopper().onValue(() => {
-      unsubscribe();
-      this.#registries.forEach((registry) => registry.dumpHandlers());
+      unsubscribeViews();
+      unsubscribePopovers();
+      this.#viewRegistries.forEach((registry) => registry.dumpHandlers());
+      this.#popoverRegistries.forEach((registry) => registry.dumpHandlers());
     });
   }
 
@@ -39,12 +68,17 @@ export default class Events {
     handler: (eventView: EventView) => void,
     options: EventViewHandlerOptions = {},
   ): () => void {
-    const kinds = new Set<EventKind>(options.kinds ?? ['event']);
-    const unregisters = [...kinds].map((kind) => {
-      const registry = this.#registries.get(kind);
-      if (!registry) throw new Error(`Unknown event kind: ${String(kind)}`);
-      return registry.registerHandler(handler);
-    });
-    return () => unregisters.forEach((unregister) => unregister());
+    return registerForKinds(this.#viewRegistries, handler, options.kinds);
+  }
+
+  /**
+   * Called for every event popover that is open now and every one that opens
+   * later. Same `kinds` semantics as {@link registerEventViewHandler}.
+   */
+  registerEventPopoverHandler(
+    handler: (popoverView: EventPopoverView) => void,
+    options: EventViewHandlerOptions = {},
+  ): () => void {
+    return registerForKinds(this.#popoverRegistries, handler, options.kinds);
   }
 }

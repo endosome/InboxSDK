@@ -7,6 +7,8 @@ import CalendarDriver from './dom-driver/google-calendar/calendar-driver';
 import CalendarRouteViewDriver from './dom-driver/google-calendar/views/calendar-route-view-driver';
 import Membrane from './lib/Membrane';
 import CalendarEventViewDriver from './dom-driver/google-calendar/views/calendar-event-view-driver';
+import CalendarEventPopoverViewDriver from './dom-driver/google-calendar/views/calendar-event-popover-view-driver';
+import EventPopoverView from './views/event-popover-view';
 import RouteView from './views/route-view/route-view';
 import EventView from './views/event-view';
 import Events from './namespaces/events';
@@ -56,6 +58,7 @@ export class PlatformImplementation extends SafeEventEmitter {
     const membrane = new Membrane([
       [CalendarRouteViewDriver, (d) => new RouteView(d)],
       [CalendarEventViewDriver, (d) => new EventView(d)],
+      [CalendarEventPopoverViewDriver, (d) => new EventPopoverView(d)],
     ]);
     this.Events = new Events(driver, membrane);
     this.Router = new Router(driver, membrane);

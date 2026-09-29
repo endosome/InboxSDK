@@ -605,13 +605,30 @@ placement can be refined later. _Not covered:_ badges on task/birthday views
 navigations + popover open/close + drag + resize-independent density/theme
 changes without duplicates or stale text.
 
-**Phase 6 — Popovers.** _Goal:_ `registerEventPopoverHandler` + `addButton`.
-_Code:_ `popover-watcher`, button widget. _Experiments:_ button placement
-without Edit/Delete (read-only, birthday, task popovers). _Deliverables:_
-popover view with `EventRef`. _Tests:_ every popover kind in RE §1.6/§1.5; never
-on quick-create or other dialogs; Space-opened popovers. _Risks:_ placement
-anchors vary. _Exit:_ button on every popover, removed on close, click gets the
-right `EventRef`.
+**Phase 6 — Popovers. DONE on branch `calendar-sdk-phase6`.** _Goal:_
+`registerEventPopoverHandler` + `addButton`. _Code:_ `services/popover-registry`
+(discovery + repair), `popover-style`,
+`views/calendar-event-popover-view-driver`, `EventPopoverView`;
+`registerEventPopoverHandler(handler, { kinds })` (default `['event']`). A
+popover is `[role=dialog][data-chips-dialog]` with
+`data-allow-wheel-scroll=false` and no `input`/`textarea` (the quick-create
+dialog has the same shape but contains inputs). Its `EventRef` comes from the
+outermost `[data-eventid]` node inside it, which is also where the button row is
+appended; the calendar id is borrowed from a chip with the same raw id. Buttons
+are re-inserted in the observer microtask when Calendar strips them; own
+insertions are ignored, own removals trigger repair; Escape and Tab still reach
+Calendar from a focused button. _Live test_ (`extension-popovers.mjs`, real
+Chrome, 66 checks, 0 fail): one button in the popover, right `EventRef` and
+kind, click runs the handler and leaves the popover open, removed on close, for
+event, recurring, multi-day, all-day, task, birthday, Space-opened, popover
+switching, 10 open/close cycles, month/schedule/day/custom-days views, dark
+theme, shared read-only and invited events (second account); none on
+quick-create (event or task); **per-frame meter: 0 of 3971 frames had a popover
+(≥3 frames old) without its button**. _Notes:_ Calendar itself does not close a
+Space-opened popover on Escape and desyncs on rapid click/Escape (also without
+the SDK); after the quick-create checks the view keys were swallowed until a
+reload (harness workaround). _Exit met:_ button on every popover kind, removed
+on close, click gets the right `EventRef`.
 
 **Phase 7 — Editor.** _Goal:_ `EVENT_EDIT` route + `EventEditorView` (observe
 title/save only). _Code:_ `editor-watcher`. _Tests:_ lifetime = route lifetime;

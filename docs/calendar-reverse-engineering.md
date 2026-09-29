@@ -884,3 +884,12 @@ Still open, in priority order:
     transport type.
 11. Firefox/Safari support (Navigation API absent) — only if a non-Chromium
     target is wanted.
+
+### 1.19 Popover DOM structure [V: `extension-popovers.mjs`]
+
+`[role=dialog][data-chips-dialog]` > `span[jsname=bN97Pc]` > holder `div` that
+carries `data-eventid` > header row + body `div[jsname=sV9x3c]` (tasks add a
+footer). The holder is the identity source and the injection parent. Calendar
+strips injected children when it re-renders the popover; the holder persists.
+Escape does not close a Space-opened popover and rapid click/Escape can desync
+Calendar's popover state — both happen without any SDK.

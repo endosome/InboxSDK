@@ -1,6 +1,7 @@
 import type { Stopper } from 'kefir-stopper';
 import type { RouteViewDriver } from './route-view-driver';
 import type { EventViewDriver } from './event-view-driver';
+import type { EventPopoverViewDriver } from './event-popover-view-driver';
 
 export type UserInfo = {
   emailAddress: string;
@@ -35,5 +36,11 @@ export interface Driver {
   getEventViewDrivers(): EventViewDriver[];
   /** Called for each chip that becomes an event view later. Returns an unsubscribe function. */
   onEventViewDriver(cb: (driver: EventViewDriver) => void): () => void;
+  /** Every event popover currently open. */
+  getEventPopoverViewDrivers(): EventPopoverViewDriver[];
+  /** Called for each popover that opens later. Returns an unsubscribe function. */
+  onEventPopoverViewDriver(
+    cb: (driver: EventPopoverViewDriver) => void,
+  ): () => void;
   destroy(): void;
 }

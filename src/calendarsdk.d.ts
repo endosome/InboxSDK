@@ -115,6 +115,30 @@ export interface EventView {
   on(event: 'destroy', listener: () => void): this;
 }
 
+export interface PopoverButtonDescriptor {
+  /** Button label. */
+  title: string;
+  /** Optional icon shown before the label (`data:`, `chrome-extension://` or https URL). */
+  iconUrl?: string;
+  /** Called when the button is clicked; the popover stays open. */
+  onClick: (popoverView: EventPopoverView) => void;
+}
+
+export interface PopoverButtonHandle {
+  update(changes: Partial<PopoverButtonDescriptor>): void;
+  remove(): void;
+}
+
+/** The popover Calendar shows for one event; ends when it closes. */
+export interface EventPopoverView {
+  readonly destroyed: boolean;
+  /** Never changes for the lifetime of a view. */
+  getEventRef(): EventRef;
+  /** Add a button; the SDK keeps it in place if Calendar re-renders the popover. */
+  addButton(descriptor: PopoverButtonDescriptor): PopoverButtonHandle;
+  on(event: 'destroy', listener: () => void): this;
+}
+
 export interface Events {
   /**
    * Called for every chip already on the page and every later one; returns an
@@ -122,6 +146,14 @@ export interface Events {
    */
   registerEventViewHandler(
     handler: (eventView: EventView) => void,
+    options?: { kinds?: EventKind[] },
+  ): () => void;
+  /**
+   * Called for every event popover open now and every one that opens later.
+   * Same `kinds` semantics (default `['event']`).
+   */
+  registerEventPopoverHandler(
+    handler: (popoverView: EventPopoverView) => void,
     options?: { kinds?: EventKind[] },
   ): () => void;
 }

@@ -57,3 +57,47 @@ export function renderShell(): { main: HTMLElement; ghostLayer: HTMLElement } {
 
 /** Let the MutationObserver callbacks run. */
 export const flush = () => new Promise<void>((r) => setTimeout(r, 0));
+
+export type PopoverOptions = {
+  decoded?: string;
+  token?: string;
+  /** Present only once the popover has finished rendering. */
+  omitId?: boolean;
+  wheel?: 'false' | 'true';
+  /** Quick-create dialogs are full of form controls. */
+  inputs?: boolean;
+};
+
+/**
+ * Popover markup as observed on live Calendar (RE §4): dialog > span[jsname=bN97Pc]
+ * > holder(data-eventid) > [header, body].
+ */
+export function makePopover(options: PopoverOptions = {}): HTMLElement {
+  const {
+    decoded = 'evt1 owner@m',
+    token,
+    omitId = false,
+    wheel = 'false',
+    inputs = false,
+  } = options;
+  const dialog = document.createElement('div');
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('data-chips-dialog', 'true');
+  dialog.setAttribute('data-allow-wheel-scroll', wheel);
+  const content = document.createElement('span');
+  content.setAttribute('jsname', 'bN97Pc');
+  const holder = document.createElement('div');
+  if (!omitId) holder.setAttribute('data-eventid', token ?? tokenFor(decoded));
+  holder.innerHTML =
+    '<div class="header"><button>Close</button></div><div class="body">details</div>';
+  if (inputs)
+    holder.querySelector('.body')!.append(document.createElement('input'));
+  content.append(holder);
+  dialog.append(content);
+  return dialog;
+}
+
+/** The overlay host Calendar renders dialogs into. */
+export function overlayHost(): HTMLElement {
+  return document.getElementById('yDmH0d') as HTMLElement;
+}

@@ -23,6 +23,14 @@ export const CALENDAR_SELECTORS = {
   eventPopover: [
     '[role=dialog][data-chips-dialog][data-allow-wheel-scroll=false]',
   ],
+  /** Any dialog of Calendar's "chips" family; the popover test above narrows it. */
+  chipsDialog: ['[role=dialog][data-chips-dialog]'],
+  /**
+   * The popover's outermost element carrying `data-eventid`: it holds the
+   * event's id and is the content root (header, body, footer) we inject into.
+   * Root: an event popover.
+   */
+  popoverEventIdNode: ['[data-eventid]'],
   /** Popover action buttons (absent on read-only shared events, RE §1.5). */
   popoverEditButton: [
     '[role=dialog] button[jsname=DyVDA]',

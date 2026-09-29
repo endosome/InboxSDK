@@ -2,8 +2,11 @@ import kefirStopper from 'kefir-stopper';
 import Membrane from '../lib/Membrane';
 import Events from './events';
 import EventView from '../views/event-view';
+import EventPopoverView from '../views/event-popover-view';
+import CalendarEventPopoverViewDriver from '../dom-driver/google-calendar/views/calendar-event-popover-view-driver';
 import CalendarEventViewDriver from '../dom-driver/google-calendar/views/calendar-event-view-driver';
 import type { Driver } from '../driver-interfaces/driver';
+import type { EventPopoverViewDriver } from '../driver-interfaces/event-popover-view-driver';
 import type {
   EventKind,
   EventRef,
@@ -39,6 +42,8 @@ function fakeDriver(initial: CalendarEventViewDriver[] = []) {
   const driver = {
     getStopper: () => stopper,
     getEventViewDrivers: () => existing,
+    getEventPopoverViewDrivers: () => [],
+    onEventPopoverViewDriver: () => () => undefined,
     onEventViewDriver: (cb: (d: EventViewDriver) => void) => {
       subs.add(cb);
       return () => subs.delete(cb);
@@ -156,4 +161,98 @@ test('an unknown kind is rejected loudly', () => {
       kinds: ['nope' as EventKind],
     }),
   ).toThrow('Unknown event kind');
+});
+
+describe('popover handlers', () => {
+  const popoverDriver = (eventId: string, kind: EventKind = 'event') =>
+    new CalendarEventPopoverViewDriver(
+      document.createElement('div'),
+      ref(eventId, kind),
+      {
+        addButton: () => ({ update: () => undefined, remove: () => undefined }),
+      },
+    );
+
+  function fakePopoverDriver(initial: CalendarEventPopoverViewDriver[] = []) {
+    const subs = new Set<(d: EventPopoverViewDriver) => void>();
+    const stopper = kefirStopper();
+    const driver = {
+      getStopper: () => stopper,
+      getEventViewDrivers: () => [],
+      onEventViewDriver: () => () => undefined,
+      getEventPopoverViewDrivers: () => initial,
+      onEventPopoverViewDriver: (cb: (d: EventPopoverViewDriver) => void) => {
+        subs.add(cb);
+        return () => subs.delete(cb);
+      },
+    } as unknown as Driver;
+    return {
+      driver,
+      stopper,
+      open: (d: CalendarEventPopoverViewDriver) => subs.forEach((cb) => cb(d)),
+    };
+  }
+
+  const popoverMembrane = () =>
+    new Membrane([
+      [CalendarEventViewDriver, (d) => new EventView(d)],
+      [CalendarEventPopoverViewDriver, (d) => new EventPopoverView(d)],
+    ]);
+
+  test('open popovers are delivered to a late handler and later ones too; default kind is event', async () => {
+    const { driver, open } = fakePopoverDriver([popoverDriver('a')]);
+    const events = new Events(driver, popoverMembrane());
+    const seen: string[] = [];
+    events.registerEventPopoverHandler((v) =>
+      seen.push(v.getEventRef().eventId),
+    );
+    await flush();
+    open(popoverDriver('b'));
+    open(popoverDriver('t', 'task'));
+    expect(seen).toEqual(['a', 'b']);
+  });
+
+  test('kinds opt-in, unregister, destroy on close', async () => {
+    const { driver, open } = fakePopoverDriver();
+    const events = new Events(driver, popoverMembrane());
+    const tasks = jest.fn();
+    const unregister = events.registerEventPopoverHandler(tasks, {
+      kinds: ['task'],
+    });
+    await flush();
+    const t = popoverDriver('t', 'task');
+    open(t);
+    expect(tasks).toHaveBeenCalledTimes(1);
+    const view = tasks.mock.calls[0][0] as EventPopoverView;
+    const onDestroy = jest.fn();
+    view.on('destroy', onDestroy);
+    t.destroy();
+    expect(onDestroy).toHaveBeenCalledTimes(1);
+    unregister();
+    open(popoverDriver('t2', 'task'));
+    expect(tasks).toHaveBeenCalledTimes(1);
+  });
+
+  test('addButton passes the popover view to onClick and refuses a destroyed view', async () => {
+    const added: Array<{ title: string; onClick: () => void }> = [];
+    const d = new CalendarEventPopoverViewDriver(
+      document.createElement('div'),
+      ref('x'),
+      {
+        addButton: (_d, descriptor) => {
+          added.push(descriptor);
+          return { update: () => undefined, remove: () => undefined };
+        },
+      },
+    );
+    const view = new EventPopoverView(d);
+    const onClick = jest.fn();
+    view.addButton({ title: 'Open', onClick });
+    added[0].onClick();
+    expect(onClick).toHaveBeenCalledWith(view);
+    d.destroy();
+    expect(() => view.addButton({ title: 'late', onClick })).toThrow(
+      'destroyed',
+    );
+  });
 });

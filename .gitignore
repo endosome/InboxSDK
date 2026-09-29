@@ -26,3 +26,5 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+tools/calendar-probe/out/
+tools/calendar-probe/node_modules

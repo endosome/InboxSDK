@@ -94,6 +94,7 @@ Requires Node (see `.nvmrc`) and Yarn 4.
 ```sh
 yarn install
 yarn gulp       # build packages/core/calendarsdk.js, generate types, build examples/*/dist
+yarn workspace @calendarsdk/google-api build   # the optional API package (dist/)
 yarn test       # Jest (jsdom)
 yarn typecheck  # tsc (run `yarn gulp` first so packages/core types exist)
 yarn lint       # ESLint + Prettier

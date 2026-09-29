@@ -17,10 +17,15 @@ jobs:
           name: Build
           command: yarn gulp
       - run:
-          name: Check output files exist
-          command:
+          name: Check output files exist (SDK bundle and every example)
+          command: |
             ls packages/core/calendarsdk.js
-            examples/calendar-hello/dist/content.js
+            for d in examples/calendar-*/; do ls "${d}dist/content.js"; done
+      - run:
+          name: Build @calendarsdk/google-api
+          command: |
+            yarn workspace @calendarsdk/google-api build
+            ls packages/google-api/dist/index.js packages/google-api/dist/index.d.ts
       - run:
           name: Clean
           command: yarn gulp clean

@@ -10,7 +10,8 @@ building the `@calendarsdk/core` SDK (`packages/core`) and testing via example
 Chrome MV3 extensions under `examples/`. It is derived from InboxSDK (Gmail);
 the Gmail integration was deleted in Phase 1. Read `docs/calendar-sdk-plan.md`
 before changing architecture and `docs/calendar-reverse-engineering.md` §0.1 for
-verified Calendar behaviour.
+verified Calendar behaviour. The public API is documented in `docs/api.md` and
+`docs/getting-started.md`; update them together with `src/calendarsdk.d.ts`.
 
 ### Commands
 

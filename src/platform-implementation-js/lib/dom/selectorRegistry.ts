@@ -51,6 +51,25 @@ export default class SelectorRegistry<K extends string = string> {
     this.#candidates = mergeOrFallBack(defaults, options);
   }
 
+  /** The resolved candidate chain of `key` (bundled defaults plus overrides). */
+  getCandidates(key: K): readonly string[] {
+    return this.#candidates[key];
+  }
+
+  /** True if `el` matches any candidate of `key`. */
+  matchesByKey(el: Element, key: K): boolean {
+    return this.#candidates[key].some((selector) => el.matches(selector));
+  }
+
+  /** The nearest ancestor-or-self of `el` matching any candidate of `key`. */
+  closestByKey(el: Element, key: K): HTMLElement | null {
+    for (const selector of this.#candidates[key]) {
+      const found = el.closest<HTMLElement>(selector);
+      if (found) return found;
+    }
+    return null;
+  }
+
   /**
    * Resolve a registry key against `el`, returning null on a miss. Use this
    * method if you want to degrade functionality when a selector is missing,

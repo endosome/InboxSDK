@@ -4,6 +4,8 @@ import CalendarSDK, {
   LOADER_VERSION,
 } from '../src/calendarsdk-js/calendarsdk';
 
+import { makeChip } from '../src/platform-implementation-js/dom-driver/google-calendar/testing-chip-fixtures';
+
 const originalWindowProperties = Object.keys(window);
 
 function renderCalendarShell() {
@@ -12,7 +14,11 @@ function renderCalendarShell() {
   document.body.innerHTML = `<div id="xUserInfo" style="display:none">
     <div id="xUserEmail">alice@example.com</div><div id="xUserName"></div>
     <div id="xTimezone">Europe/Warsaw</div><div id="xGmtOffset">7200000</div>
-    <div id="xUserLocale">en</div></div>`;
+    <div id="xUserLocale">en</div></div>
+    <div role="main"><div id="grid"></div></div>`;
+  document
+    .getElementById('grid')!
+    .append(makeChip({ decoded: 'evt1 owner@m' }));
   window.history.pushState({}, '', '/calendar/u/0/r/week/2026/9/30');
 }
 
@@ -32,6 +38,7 @@ test('loads on calendar.google.com, exposes Router and User, adds no globals', a
     '__test_origin',
     '__coverage__',
     // jsdom exposes elements with an id as named window properties
+    'grid',
     'xUserInfo',
     'xUserEmail',
     'xUserName',
@@ -56,6 +63,19 @@ test('loads on calendar.google.com, exposes Router and User, adds no globals', a
   expect(route.getType()).toBe('WEEK');
   expect(route.getAnchorDate()).toBe('2026-09-30');
   expect(sdk.Router.RouteTypes.MONTH).toBe('MONTH');
+
+  // Events: chips present at load are delivered; later chips too
+  const seen: string[] = [];
+  sdk.Events.registerEventViewHandler((v) =>
+    seen.push(v.getEventRef().eventId),
+  );
+  await new Promise((r) => setTimeout(r, 10));
+  expect(seen).toEqual(['evt1']);
+  document
+    .querySelector('[role=main]')!
+    .append(makeChip({ decoded: 'evt2 owner@m' }));
+  await new Promise((r) => setTimeout(r, 10));
+  expect(seen).toEqual(['evt1', 'evt2']);
 
   const onDestroy = jest.fn();
   sdk.on('destroy', onDestroy);

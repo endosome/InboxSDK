@@ -2,6 +2,7 @@ import kefirStopper from 'kefir-stopper';
 import type { Stopper } from 'kefir-stopper';
 import type { Driver, UserInfo } from '../../driver-interfaces/driver';
 import type { RouteViewDriver } from '../../driver-interfaces/route-view-driver';
+import type { EventViewDriver } from '../../driver-interfaces/event-view-driver';
 import SelectorRegistry from '../../lib/dom/selectorRegistry';
 import type { InvalidSelectorReporter } from '../../lib/dom/mergeSelectorOverrides';
 import waitFor from '../../lib/wait-for';
@@ -12,6 +13,7 @@ import {
   type SelectorOverrides,
 } from './selectors';
 import RouteService from './services/route-service';
+import EventRegistry from './services/event-registry';
 import { readUserInfo } from './services/user-info';
 
 export type CalendarDriverOptions = {
@@ -34,6 +36,7 @@ export default class CalendarDriver implements Driver {
   readonly #stopper: Stopper = kefirStopper();
   #userInfo: UserInfo | null = null;
   #routeService: RouteService | null = null;
+  #eventRegistry: EventRegistry | null = null;
   #destroyed = false;
 
   constructor(appId: string, options: CalendarDriverOptions = {}) {
@@ -72,6 +75,10 @@ export default class CalendarDriver implements Driver {
         reportEvent('route-disagreement', { input, type: descriptor.type }),
     });
     this.#routeService.start();
+    // A route change rebuilds the grid: re-check every chip.
+    this.#routeService.subscribe(() => this.#eventRegistry?.reconcileAll());
+    this.#eventRegistry = new EventRegistry(document, this.selectors);
+    this.#eventRegistry.start();
   }
 
   getAppId(): string {
@@ -97,8 +104,19 @@ export default class CalendarDriver implements Driver {
     return this.#routeService.subscribe(cb);
   }
 
+  getEventViewDrivers(): EventViewDriver[] {
+    if (!this.#eventRegistry) throw new Error('CalendarDriver is not ready');
+    return this.#eventRegistry.getAll();
+  }
+
+  onEventViewDriver(cb: (driver: EventViewDriver) => void): () => void {
+    if (!this.#eventRegistry) throw new Error('CalendarDriver is not ready');
+    return this.#eventRegistry.subscribe(cb);
+  }
+
   destroy(): void {
     this.#destroyed = true;
+    this.#eventRegistry?.stop();
     this.#routeService?.stop();
     this.#stopper.destroy();
   }

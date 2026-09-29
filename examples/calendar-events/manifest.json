@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "CalendarSDK event views example",
+  "version": "0.0.1",
+  "description": "Registers an event view handler and publishes the live views to <html data-calsdk-events> (used by the live checks in tools/calendar-probe).",
+  "content_scripts": [
+    {
+      "matches": ["https://calendar.google.com/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}

@@ -142,14 +142,13 @@ type EventRef = {
 
 // ---- Events
 interface Events {
-  registerEventViewHandler(h: (v: EventView) => void, opts?: { kinds?: Array<'event' | 'task' | 'birthday'> }): () => void;  // per visible chip segment; default kinds: ['event']
+  registerEventViewHandler(h: (v: EventView) => void, opts?: { kinds?: EventKind[] }): () => void;  // per visible chip segment; default kinds: ['event']
   registerEventPopoverHandler(h: (v: EventPopoverView) => void): () => void;
   registerEventEditorHandler(h: (v: EventEditorView) => void): () => void; // V1 NICE-TO-HAVE
 }
 interface EventView extends Emitter<{ destroy: void }> {
   getEventRef(): EventRef;               // current ref; NEVER changes for a view — a change destroys the view
   getSegment(): { index: number; count: number; isPrimary: boolean };  // multi-day events render N chips [V]
-  getTitleText(): string;                // best-effort, from chip text
   isAllDay(): boolean;
   addBadge(d: { text?: string; iconUrl?: string; title?: string; onClick?(e: EventView): void }): BadgeHandle;
   readonly destroyed: boolean;
@@ -528,16 +527,38 @@ back/forward/settings/editor, from a real content script. _Not covered:_ Today
 navigating to a _different_ week is covered in `today.mjs` scratch only; Firefox
 fallback path is unit-tested only.
 
-**Phase 3 — `EventView` lifecycle.** _Goal:_ lifetime-bound `EventView` per
-eligible chip. _Code:_ `root-observer`, `event-registry`, `identity.ts` (decode,
-kind, suffix), `Events` namespace, `Membrane` mapping. _Experiments:_ ≥300-chip
-scale test; rapid-navigation stress. _Deliverables:_ `registerEventViewHandler`
-with `getEventRef/getSegment/isAllDay`. _Tests:_ sanitised fixtures + scripted
-mutations for every row of §7.3 (id set after insert, remove+re-add same frame,
-ghost, draft chip, multi-day, all-day↔timed); leak test (0 live views after 100
-navigations). _Risks:_ Calendar render-timing changes; observer cost at scale.
-_Exit:_ 100 % of chips on the fixture weeks get the correct `EventRef`; no
-leaked views; identity-decode failure emits a Compat warning and no view.
+**Phase 3 — `EventView` lifecycle. DONE on branch `calendar-sdk-phase3`.**
+_Goal:_ lifetime-bound `EventView` per eligible chip. _Done:_ `identity.ts`
+(pure decode of `data-eventid`: kind prefix, instance suffix, calendar hint;
+unknown shapes → `null`, never a guess; full calendar id from `jslog` field 1
+for plain events); `EventRegistry` — one `MutationObserver` on `document.body`
+with state-based reconciliation, chip eligibility (inside `[role=main]`, has
+`jsaction` + `data-keyboardactiontype`, decodable id set after insertion) and
+per-batch reconcile so remove+re-add of the same element keeps its view while a
+replaced element or a changed id destroys the old view and creates a new one;
+`CalendarEventViewDriver` (`getEventRef`, per-call `getSegment` in document
+order, per-call `isAllDay` from `data-dragsource-type`/`role`/`[data-datekey]`);
+public `EventView`; `Events` namespace with
+`registerEventViewHandler(handler, { kinds })` (default `['event']`, tasks and
+birthdays opt-in) on `HandlerRegistry` + `Membrane`; `CalendarDriver` reconciles
+on route change; `EventRef`/`EventView`/`Events` in the public types;
+`examples/calendar-events`. `getTitleText()` was **dropped from V1** (locale
+text, NICE tier). _Tests:_ 187 → 282 across identity (20), registry (25: every
+row of plan §7.3 that jsdom can express, ghost, draft chip, multi-day segments,
+all-day flip, decode-failure reporting, 100-navigation leak test, 500-chip
+batch), `Events` (7) and the load smoke. _Live [V]_ (`extension-events.mjs`,
+built SDK in real Chrome): views == eligible DOM chips after load, next/previous
+week, `m d y a x w`, popover open/close (no views created), quick-create (draft
+chip ignored), 24 rapid navigations (`created − destroyed == live`), and
+**mid-drag: the ghost chip exists in the DOM (2 chips with the id, 1 inside
+`[role=main]`) yet exactly one `EventView` existed at every sample**; 23 chips:
+20 events, 2 tasks, 1 birthday; multi-day event = segments 1/3, 2/3, 3/3;
+recurring instances carry `instanceId`. _Not covered:_ a live cross-day drag
+(replacement semantics are unit-tested from the observed DOM behaviour, live
+drag would edit fixtures), ≥300 chips live (jsdom 500-chip test only), Workspace
+accounts. _Exit met:_ 100 % of chips on the fixture weeks get the correct
+`EventRef` (views == eligible chips in every state tested); no leaked views;
+decode failure reports a `identity-decode-failed` event and emits no view.
 
 **Phase 4 — Identity hardening.** _Goal:_ trustworthy `calendarId`/kind across
 accounts. _Code:_ `CalendarIdMap`, `jslog` cross-check, optional `dataProvider`.
@@ -620,8 +641,8 @@ nightly job green for a week; broken-selector drill passes.
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
 | ~~Do isolated-world findings hold in a real MV3 content script?~~ **Answered (Phase 2)**: Navigation API, `#xUserInfo`, `body[data-viewkey]`, observers, extension-URL images hold; Trusted Types do **not** apply to content scripts | `extension-smoke.mjs`                                                                                               | —                                    |
 | Workspace custom-domain / resource calendar ids; other `data-ui-kind`                                                                                                                                                                 | Workspace test account                                                                                              | `calendarId` expansion, variants.ts  |
-| Behaviour at hundreds of chips (virtualisation, "+N more", observer cost)                                                                                                                                                             | synthetic 300-event calendar; trace                                                                                 | Phase 3 perf                         |
-| Rapid navigation (held `n`, double Next) leaks/duplicates                                                                                                                                                                             | scripted stress + view leak counter                                                                                 | Phase 3                              |
+| Behaviour at hundreds of chips (virtualisation, "+N more", observer cost) — **jsdom 500-chip batch passes; live ≥300 chips still open**                                                                                               | synthetic 300-event calendar; trace                                                                                 | Phase 5 perf                         |
+| ~~Rapid navigation leaks/duplicates~~ **Answered (Phase 3)**: 24 rapid Next/Previous clicks in real Chrome, `created − destroyed == live` and views == DOM chips                                                                      | `extension-events.mjs`                                                                                              | —                                    |
 | Timed → all-day drag gesture with real input                                                                                                                                                                                          | manual/headed run with real pointer                                                                                 | none (identity known via editor)     |
 | Delete of recurring instance / guest event; undo                                                                                                                                                                                      | delete fixtures, observe dialogs                                                                                    | Phase 3 lifecycle                    |
 | Narrow window / mobile layout, RTL & CJK locales, non-Gregorian                                                                                                                                                                       | resize + `?hl=ar/he/ja` pass                                                                                        | selector ranking                     |

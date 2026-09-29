@@ -6,7 +6,10 @@ import type { Driver } from './driver-interfaces/driver';
 import CalendarDriver from './dom-driver/google-calendar/calendar-driver';
 import CalendarRouteViewDriver from './dom-driver/google-calendar/views/calendar-route-view-driver';
 import Membrane from './lib/Membrane';
+import CalendarEventViewDriver from './dom-driver/google-calendar/views/calendar-event-view-driver';
 import RouteView from './views/route-view/route-view';
+import EventView from './views/event-view';
+import Events from './namespaces/events';
 import Router from './namespaces/router';
 import User from './namespaces/user';
 import type { SelectorOverrides } from './dom-driver/google-calendar/selectors';
@@ -37,6 +40,7 @@ export class PlatformImplementation extends SafeEventEmitter {
   readonly LOADER_VERSION: string;
   readonly IMPL_VERSION: string = BUILD_VERSION;
   readonly Logger: AppLogger;
+  readonly Events: Events;
   readonly Router: Router;
   readonly User: User;
   readonly #driver: Driver;
@@ -51,10 +55,12 @@ export class PlatformImplementation extends SafeEventEmitter {
     };
     const membrane = new Membrane([
       [CalendarRouteViewDriver, (d) => new RouteView(d)],
+      [CalendarEventViewDriver, (d) => new EventView(d)],
     ]);
+    this.Events = new Events(driver, membrane);
     this.Router = new Router(driver, membrane);
     this.User = new User(driver);
-    // Events, Toolbar and Compat are added in later phases.
+    // Toolbar and Compat are added in later phases.
   }
 
   destroy() {

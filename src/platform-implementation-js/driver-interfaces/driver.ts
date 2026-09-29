@@ -1,5 +1,6 @@
 import type { Stopper } from 'kefir-stopper';
 import type { RouteViewDriver } from './route-view-driver';
+import type { EventViewDriver } from './event-view-driver';
 
 export type UserInfo = {
   emailAddress: string;
@@ -30,5 +31,9 @@ export interface Driver {
    * function. The previous route's stopper fires before the callback runs.
    */
   onRouteViewDriver(cb: (driver: RouteViewDriver) => void): () => void;
+  /** Every eligible chip currently on the page. */
+  getEventViewDrivers(): EventViewDriver[];
+  /** Called for each chip that becomes an event view later. Returns an unsubscribe function. */
+  onEventViewDriver(cb: (driver: EventViewDriver) => void): () => void;
   destroy(): void;
 }

@@ -65,7 +65,49 @@ export interface User {
   getTimeZone(): string | null;
 }
 
+export type EventKind = 'event' | 'task' | 'birthday' | 'unknown';
+
+/** Identifies one calendar item, or one instance of a recurring one. */
+export interface EventRef {
+  /** Base id; for a recurring event the series id. */
+  eventId: string;
+  /** Recurring instances: original start (`20260929T110000Z`, UTC) or all-day date (`20260930`). */
+  instanceId?: string;
+  /** Full id of the calendar this copy lives on, or null when only the hint is known. */
+  calendarId: string | null;
+  /** Calendar id as abbreviated in Calendar's DOM (e.g. `owner@m`). */
+  calendarIdHint: string;
+  kind: EventKind;
+  /** Calendar's own token; `/r/eventedit/<rawId>` opens the editor. */
+  rawId: string;
+  confidence: 'exact' | 'derived';
+}
+
+/** One rendered chip of a calendar item. */
+export interface EventView {
+  readonly destroyed: boolean;
+  /** Never changes for the lifetime of a view. */
+  getEventRef(): EventRef;
+  /** Which chip of a multi-day event this is; recomputed on every call. */
+  getSegment(): { index: number; count: number; isPrimary: boolean };
+  /** Recomputed on every call (dragging can flip timed/all-day). */
+  isAllDay(): boolean;
+  on(event: 'destroy', listener: () => void): this;
+}
+
+export interface Events {
+  /**
+   * Called for every chip already on the page and every later one; returns an
+   * unregister function. Default kinds: `['event']`.
+   */
+  registerEventViewHandler(
+    handler: (eventView: EventView) => void,
+    options?: { kinds?: EventKind[] },
+  ): () => void;
+}
+
 export interface CalendarSDK {
+  readonly Events: Events;
   readonly Router: Router;
   readonly User: User;
   readonly LOADER_VERSION: string;

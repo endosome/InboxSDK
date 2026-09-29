@@ -32,10 +32,10 @@ off: `yarn test`, `yarn lint`, `yarn typecheck` (after `yarn gulp`), and
 
 ### Rules that come from Google Calendar
 
-- **No HTML-string DOM sinks** in SDK code (`innerHTML`, `outerHTML`,
-  `insertAdjacentHTML`, `createContextualFragment`, `document.write`): Calendar
-  enforces Trusted Types and they throw. ESLint enforces this; build DOM with
-  `createElement`/`textContent`/`setAttribute` or one Trusted Types helper.
+- **HTML-string DOM sinks** (`innerHTML`, `insertAdjacentHTML`, …) are fine in
+  content-script code (Trusted Types do not apply to real content scripts) but
+  **forbidden in MAIN-world code** (`src/injected-js/`, ESLint-enforced), where
+  Calendar's `require-trusted-types-for 'script'` makes them throw.
 - Never send data anywhere from core; diagnostics go through `lib/reporter.ts`.
 - Do not rely on `<html data-prefetch-view-key>` for routing (load-time only);
   see the plan §8.

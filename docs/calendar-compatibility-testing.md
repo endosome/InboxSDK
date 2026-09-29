@@ -91,7 +91,7 @@ PASS calendarId via jslog — plain events only (tasks/birthdays have no full id
 PASS dateCell (data-datekey) / user info in DOM / Navigation API present
 PASS overlay host #yDmH0d present / empty when idle / body[data-viewkey] live key / body[data-viewfamily]
 PASS data-dragsource-type classes (2 timed, 6 all-day, 9 read-only)
-INFO Trusted Types enforced for innerHTML (SDK must use DOM builders / TT policy) — yes
+INFO Trusted Types enforced for page-world innerHTML (applies to MAIN-world code only; content scripts are exempt) — yes
 PASS variant fingerprint data-ui-kind / route: DAY MONTH YEAR AGENDA SEARCH
 PASS popover detected / identity / inside #yDmH0d / no form controls / data-allow-wheel-scroll=false / edit+delete jsnames
 PASS route: EVENT_EDIT / editorTitle / editorSave / editorCancel
@@ -129,7 +129,7 @@ Severity model:
 | popover action button found only via a locale rung                                                                                                                | warning                                                                                          |
 | editor route regex `/r/eventedit/<eid>` no longer matches                                                                                                         | hard; editor title/save/cancel `jsname` missing → warning                                        |
 | Navigation API absent                                                                                                                                             | warning (fallback path)                                                                          |
-| Trusted Types **no longer** enforced (`innerHTML` succeeds)                                                                                                       | info (opportunity); the SDK keeps using DOM builders                                             |
+| Trusted Types **no longer** enforced for page-world `innerHTML`                                                                                                   | info (only affects a MAIN-world shim)                                                            |
 | overlay host `#yDmH0d` missing / non-empty when idle                                                                                                              | hard / warning                                                                                   |
 | `body[data-viewkey]` ≠ `html[data-prefetch-view-key]`                                                                                                             | **expected** to differ after in-app navigation (html key is load-time only) — informational only |
 | `data-dragsource-type` value outside {2, 6, 9, absent}                                                                                                            | warning                                                                                          |

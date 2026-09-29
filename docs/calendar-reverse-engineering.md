@@ -74,7 +74,7 @@ listed here.
 | User              | `#xUserInfo` children `#xUserEmail`, `#xTimezone`, `#xGmtOffset`, `#xUserLocale`                                                                                                                                        | 1.18, 6             |
 | Popover           | `[role=dialog][data-chips-dialog][data-allow-wheel-scroll=false]`, no `input`/`textarea`; lives in overlay host `#yDmH0d`; Edit and Delete absent on read-only shared events; Edit absent on birthdays (Delete present) | 1.5–1.7, 4          |
 | Other dialogs     | notification prompt, Meet coach-mark, time-zone prompt, recurring-scope, guest-update, invite-confirm — plain `[role=dialog]`, block clicks                                                                             | 1.8, 1.17           |
-| Injection         | Trusted Types enforced (`innerHTML` throws; DOM builders/`createPolicy` work); Calendar strips injected children on re-render while chips persist                                                                       | 1.18, 4             |
+| Injection         | Trusted Types are enforced for page/MAIN-world code but **not for a real content script** (`innerHTML` works there); Calendar strips injected children on re-render while chips persist                                 | 1.18, 4             |
 | Load              | chips 2.2–3.1 s after commit; `#xUserInfo` ~1 s                                                                                                                                                                         | 1.18                |
 | Not verified      | Workspace ids, real content-script run, ≥300 chips, RTL/CJK, narrow window, Calendar API correlation                                                                                                                    | 9                   |
 
@@ -555,29 +555,30 @@ off). Week view, 21–23 chips, `compat.mjs` 26 checks run in each state.
 
 ### 1.18 Pre-implementation audit findings [V: `audit-*.mjs`]
 
-**1. Trusted Types are enforced — blocks the InboxSDK injection style.** The
-document response carries
+**1. Trusted Types: enforced for page/MAIN-world code and for CDP-created
+isolated worlds, but NOT for a real extension content script** (**corrected** —
+an earlier draft, based only on CDP `Page.createIsolatedWorld`, called this a
+critical constraint on all SDK UI code). The document response carries
 `Content-Security-Policy: … require-trusted-types-for 'script'` (plus a
-nonce/`strict-dynamic` script-src). In an isolated world:
+nonce/`strict-dynamic` script-src).
 
-| Operation (isolated world, real page)                                                             | Result                                                                                                          |
-| ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `el.innerHTML = '<b>…'`, `insertAdjacentHTML`, `template.innerHTML`, `shadowRoot.innerHTML`       | **Throws `TypeError: This document requires 'TrustedHTML' assignment`**                                         |
-| `document.createElement` / `createElementNS` (SVG) + `textContent` + `setAttribute` + `style.*`   | Works                                                                                                           |
-| `<style>` element with CSS text; inline `style` attribute                                         | Applies (computed colour verified)                                                                              |
-| `trustedTypes.createPolicy('<any name>', { createHTML })` then `innerHTML = policy.createHTML(…)` | **Works**; a second policy with a different name also allowed (no `trusted-types` allow-list directive present) |
-| `new Image()` with a `data:` URL                                                                  | Loads                                                                                                           |
+| Operation                                                                                   | Page main world / CDP isolated world                         | **Real MV3 content script (Chrome 154)** [V `extension-smoke.mjs`]                                                 |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `el.innerHTML = '<b>…'`, `insertAdjacentHTML`, `template.innerHTML`, `shadowRoot.innerHTML` | **Throws** `This document requires 'TrustedHTML' assignment` | **Allowed** — detached `div`, an element attached inside a chip, and `document.body.insertAdjacentHTML` all worked |
+| `createElement` + `textContent` + `setAttribute` + `style.*`, SVG via `createElementNS`     | works                                                        | works                                                                                                              |
+| `trustedTypes.createPolicy(<any name>)` + `createHTML`                                      | works (no `trusted-types` allow-list directive)              | works                                                                                                              |
+| `<style>` element / inline style attribute                                                  | applies                                                      | applies (computed colour verified)                                                                                 |
+| `data:` image; `chrome-extension://` image (web-accessible resource)                        | loads                                                        | both load (16×16 icon, `naturalWidth` 16)                                                                          |
 
-- **Implication:** InboxSDK-style UI code (`innerHTML` at ~86 sites in 42
-  non-test files, plus `auto-html`, React `dangerouslySetInnerHTML`-style paths)
-  **cannot be ported unchanged**. Rule for the Calendar SDK: build DOM with
-  `createElement`/`textContent`, or route all HTML through a single
-  `trustedTypes.createPolicy('calendarsdk', …)` helper with a sanitiser; add an
-  ESLint rule banning direct `innerHTML`. Behaviour of _real extension_ content
-  scripts (as opposed to a CDP isolated world) is assumed identical [X — Phase 2
-  exit check].
-- The `data:` image load succeeds (no `img-src` restriction seen); extension-URL
-  images and web-accessible resources were not tested [X].
+- **Implication:** SDK code that runs in the content script (everything in V1)
+  may use HTML strings; InboxSDK's `innerHTML`-based widgets are **not**
+  blocked. HTML-string sinks remain forbidden in any **MAIN-world** shim
+  (`src/injected-js/`), and DOM builders are still preferable for robustness
+  (Firefox behaviour untested [X]). The ESLint ban is therefore scoped to
+  `src/injected-js/**` only.
+- Lesson recorded: CDP isolated worlds are _not_ a faithful model of content
+  scripts for CSP/Trusted Types (they were faithful for the Navigation API, DOM
+  reads and observers — re-verified in the real extension).
 
 **2. Load timing** (3 runs, from navigation commit):
 `<html data-prefetch-view-key>` and `navigation` at ~0.4 s; `#xUserInfo`,
@@ -863,8 +864,8 @@ Still open, in priority order:
 2. **Real extension content-script run**: everything so far used CDP isolated
    worlds and Playwright main-world scripts. Confirm in a real MV3 extension
    that (a) Navigation API events, (b) `#xUserInfo`/`#initialdata` reads, (c)
-   DOM builder injection + `trustedTypes.createPolicy`, (d) a `MutationObserver`
-   on `document.body` all behave the same (Phase 2 exit criterion).
+   DOM injection, (d) a `MutationObserver` on `document.body` all behave the
+   same (Phase 2 exit criterion).
 3. **Timed → all-day drag with real pointer input** (synthetic mouse never
    triggered the all-day drop target, §1.12).
 4. **Scale/virtualisation**: fixtures have ≤ 40 chips; behaviour with hundreds

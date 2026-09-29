@@ -154,18 +154,13 @@ inboxsdk.ts ──► PlatformImplementationLoader ──► main.ts ──► p
 says 384, stale); `yarn typecheck` — 8 pre-existing `TS7006` errors in
 `examples/app-menu/content.ts`; `yarn lint` clean.
 
-## 7. Constraint discovered later: Trusted Types
+## 7. Trusted Types (checked later; not a constraint for content scripts)
 
-Calendar serves `require-trusted-types-for 'script'` (RE log §1.18): in an
-isolated world `innerHTML`/`insertAdjacentHTML`/`template.innerHTML` throw,
-DOM-builder APIs and `trustedTypes.createPolicy(...)` work. This repo's UI code
-relies on `innerHTML` at ~86 sites in 42 non-test files
-(`grep -rn innerHTML src`), plus `auto-html` templates in widgets
-(`collapsible-panel-view.ts`, …) — **so the "KEEP generic UI helper" candidates
-in §2 (rows 17, 24, `generic-button-view`, React helpers) each need a
-Trusted-Types-safe rewrite or a single sanctioned policy helper**, and an ESLint
-ban on direct `innerHTML` should land in Phase 1. Gmail never enforced Trusted
-Types, so nothing in the existing test-suite covers this.
+Calendar serves `require-trusted-types-for 'script'`, which blocks `innerHTML`
+and friends for page/MAIN-world code and in CDP-created isolated worlds — but
+**a real MV3 content script is exempt** (RE log §1.18, verified with
+`examples/calendar-smoke`). InboxSDK-style `innerHTML` widgets are therefore not
+ruled out by it. Only a MAIN-world shim must avoid HTML-string sinks.
 
 ## 8. Outcome (Phase 1)
 

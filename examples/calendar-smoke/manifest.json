@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "CalendarSDK smoke test (throwaway)",
+  "version": "0.0.1",
+  "description": "Checks the isolated-world assumptions of the CalendarSDK plan in a real content script. Writes its results to <html data-calsdk-smoke>.",
+  "content_scripts": [
+    {
+      "matches": ["https://calendar.google.com/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    { "resources": ["icon.png"], "matches": ["https://calendar.google.com/*"] }
+  ]
+}

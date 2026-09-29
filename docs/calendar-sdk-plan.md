@@ -56,12 +56,12 @@ hundreds of events, delete of recurring/guest events, RTL/CJK locales, narrow
 windows. These are listed as Phase 0/2 exit criteria in §12 and in the RE log
 §9.
 
-**Trusted Types (new, critical):** Calendar enforces
-`require-trusted-types-for 'script'`;
-`innerHTML`/`insertAdjacentHTML`/`template` throw in an isolated world, while
-DOM-builder APIs and `trustedTypes.createPolicy` work (RE §1.18). All SDK UI
-must be built with DOM APIs or one Trusted Types helper — InboxSDK's
-`innerHTML`-based widgets cannot be reused as-is.
+**Trusted Types (resolved in Phase 2):** Calendar serves
+`require-trusted-types-for 'script'`. It throws for page/MAIN-world code and for
+CDP-created isolated worlds, but **not for a real MV3 content script** —
+verified with `examples/calendar-smoke` (RE §1.18). So V1 code (content script
+only) may use HTML strings; the HTML-sink lint ban applies only to a future
+MAIN-world shim (`src/injected-js/**`).
 
 ## 2. Design principles (from the brief's priority list)
 
@@ -375,11 +375,11 @@ injected node can vanish from a _live_ chip with no chip mutation. `addBadge`
 therefore registers a _desired-state entry_ `(view → badge spec)`; a per-frame
 pass ensures the node exists under the chip (idempotent, marked
 `data-calsdk-*`), re-inserting after wipes and removing it when the view dies;
-it watches for removal of its own nodes via the same body observer. **All
-injected DOM is built with DOM APIs or one Trusted Types policy (RE §1.18) —
-never `innerHTML`.** Alternative for V2: an absolutely-positioned overlay layer
-over the grid (immune to re-render but must track layout, scroll and drag) —
-spike before choosing.
+it watches for removal of its own nodes via the same body observer. Injected DOM
+may use HTML strings in the content script (Trusted Types do not apply there, RE
+§1.18); MAIN-world code must not. Alternative for V2: an absolutely-positioned
+overlay layer over the grid (immune to re-render but must track layout, scroll
+and drag) — spike before choosing.
 
 ### 7.5 Performance
 
@@ -481,18 +481,15 @@ validity-tested), `PlatformImplementation` shell with API-version gating that
 **throws** on any origin but `https://calendar.google.com`,
 `CalendarSDK.load(1, { appId })`, handwritten public types; single
 `calendarsdk.js` bundle (no pageWorld/background/remote),
-`examples/calendar-hello`, trimmed CI; ESLint ban on HTML-string sinks (Trusted
-Types); rebrand to `@calendarsdk/*` (placeholder scope, plan §17) with
-attribution kept. _Exit met:_ `yarn gulp` (bundle + example), `yarn typecheck` 0
-errors, `yarn test` 187 tests / 22 suites (420 → 187: 238 tests left with the
-deleted Gmail code, 5 added), `yarn lint`, `yarn lint:stylelint`
-(`--allow-empty-input`), grep gate for
-`GmailDriver|dom-driver/gmail|mail.google.com|inboxsdk.com|pubsub|mailfoogae| isStreakAppId|data-inboxsdk-`
-empty; the built bundle was also loaded in jsdom (resolves on calendar origin,
-rejects elsewhere). _Deliberately deferred:_ pruning Gmail-only dependencies
-(react, page-parser-tree, order-manager, …) and `yarn.lock`; the
-`platform-implementation-js` directory name kept; `xhr-proxy-factory` kept
-dormant; the old README contribution guidelines were replaced, not ported.
+`examples/calendar-hello`, trimmed CI; ESLint ban on HTML-string sinks
+(initially SDK-wide; **narrowed in Phase 2 to
+`src/injected-js/**`after the real-content-script check showed Trusted Types do not apply to content scripts**); rebrand to`@calendarsdk/\*`(placeholder scope, plan §17) with attribution kept. _Exit met:_`yarn
+gulp`(bundle + example),`yarn typecheck`0 errors,`yarn
+test`187 tests / 22 suites (420 → 187: 238 tests left with the deleted Gmail code, 5 added),`yarn
+lint`, `yarn
+lint:stylelint` (`--allow-empty-input`), grep gate for `GmailDriver|dom-driver/gmail|mail.google.com|inboxsdk.com|pubsub|mailfoogae|
+isStreakAppId|data-inboxsdk-`empty; the built bundle was also loaded in jsdom (resolves on calendar origin, rejects elsewhere). _Deliberately deferred:_ pruning Gmail-only dependencies (react, page-parser-tree, order-manager, …) and`yarn.lock`; the `platform-implementation-js`directory name kept;`xhr-proxy-factory`
+kept dormant; the old README contribution guidelines were replaced, not ported.
 
 **Phase 2 — Calendar bootstrap.** _Goal:_ SDK loads on Calendar; route, root and
 user info work from a real content script. _Code:_ loader (`CalendarSDK.load`),
@@ -503,8 +500,7 @@ DOM-builder node and one Trusted-Types-policy node into a chip and observes
 `document.body` — closes the "CDP isolated world ≠ real content script" gap.
 _Deliverables:_ example extension logging `RouteType`/user on every navigation.
 _Tests:_ classifier table tests (§8), jsdom fallback test, extension smoke on
-live Calendar. _Risks:_ Navigation API or Trusted Types behave differently in a
-real content script (then fall back to `popstate`/policy helper). _Exit:_
+live Calendar. _Risks:_ (retired by the smoke test, see Phase 2 status). _Exit:_
 correct `RouteType` for all verified views incl.
 back/forward/Today/settings/editor.
 
@@ -582,11 +578,10 @@ nightly job green for a week; broken-selector drill passes.
    `data-*`, `jslog` structure with fake ids) → `__tests__/calendar-fixtures/`.
 4. Write `identity.ts` + unit tests (decoder, suffix classifier, failure policy)
    — pure functions, no DOM.
-5. Add an ESLint rule banning `innerHTML`/`insertAdjacentHTML`/`outerHTML =` in
-   SDK code (Trusted Types), then extract generic core: `Membrane`,
-   `HandlerRegistry`, `SafeEventEmitter`, selector registry (generic),
-   stopper/stream helpers into `src/common-core` or keep in place; delete Gmail
-   wholesale (Phase 1).
+5. (done in Phase 1, later scoped to MAIN-world code) extract generic core:
+   `Membrane`, `HandlerRegistry`, `SafeEventEmitter`, selector registry
+   (generic), stopper/stream helpers into `src/common-core` or keep in place;
+   delete Gmail wholesale (Phase 1).
 6. `RouteService` + Router namespace + example extension (Phase 2).
 7. `root-observer` + `event-registry` with fixture-driven tests (Phase 3).
 8. Compat runner v0: reuse `experiments/*.mjs` logic as `compat/checks/*.ts`
@@ -597,21 +592,21 @@ nightly job green for a week; broken-selector drill passes.
 
 ## 15. Unknowns / experiments (summary; detail in RE log §9)
 
-| Unknown                                                                                                                                              | Experiment                                                                                                          | Blocks                               |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Do isolated-world findings hold in a real MV3 content script (Navigation API, DOM reads, Trusted Types, observer)?                                   | throwaway extension, Phase 2 step 1                                                                                 | everything                           |
-| Workspace custom-domain / resource calendar ids; other `data-ui-kind`                                                                                | Workspace test account                                                                                              | `calendarId` expansion, variants.ts  |
-| Behaviour at hundreds of chips (virtualisation, "+N more", observer cost)                                                                            | synthetic 300-event calendar; trace                                                                                 | Phase 3 perf                         |
-| Rapid navigation (held `n`, double Next) leaks/duplicates                                                                                            | scripted stress + view leak counter                                                                                 | Phase 3                              |
-| Timed → all-day drag gesture with real input                                                                                                         | manual/headed run with real pointer                                                                                 | none (identity known via editor)     |
-| Delete of recurring instance / guest event; undo                                                                                                     | delete fixtures, observe dialogs                                                                                    | Phase 3 lifecycle                    |
-| Narrow window / mobile layout, RTL & CJK locales, non-Gregorian                                                                                      | resize + `?hl=ar/he/ja` pass                                                                                        | selector ranking                     |
-| Extension-URL images / web-accessible resources under page CSP                                                                                       | inject `<img src=chrome-extension://…>`                                                                             | badge icons                          |
-| `Router.goto` feasibility                                                                                                                            | synthetic `pushState`+`popstate` in isolated world vs MAIN                                                          | LATER                                |
-| Event id position in network responses                                                                                                               | capture range containing fixtures                                                                                   | canary only                          |
-| Firefox/Safari fallback path (no Navigation API)                                                                                                     | smoke                                                                                                               | support matrix                       |
-| Calendar API leg of identity: does `events.get` accept `<id>_<UTC start>` instance ids and the `data-eventid` base id? **No API call has been made** | one authenticated `events.get`/`instances` call against the test account (requires an OAuth token — owner decision) | `dataProvider` correlation (Phase 4) |
-| Does `#xTimezone` track the primary-tz setting live or only at load?                                                                                 | change primary tz in-app, re-read `#xTimezone` without reload                                                       | `User.getTimeZone()`                 |
+| Unknown                                                                                                                                                                                                                               | Experiment                                                                                                          | Blocks                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| ~~Do isolated-world findings hold in a real MV3 content script?~~ **Answered (Phase 2)**: Navigation API, `#xUserInfo`, `body[data-viewkey]`, observers, extension-URL images hold; Trusted Types do **not** apply to content scripts | `extension-smoke.mjs`                                                                                               | —                                    |
+| Workspace custom-domain / resource calendar ids; other `data-ui-kind`                                                                                                                                                                 | Workspace test account                                                                                              | `calendarId` expansion, variants.ts  |
+| Behaviour at hundreds of chips (virtualisation, "+N more", observer cost)                                                                                                                                                             | synthetic 300-event calendar; trace                                                                                 | Phase 3 perf                         |
+| Rapid navigation (held `n`, double Next) leaks/duplicates                                                                                                                                                                             | scripted stress + view leak counter                                                                                 | Phase 3                              |
+| Timed → all-day drag gesture with real input                                                                                                                                                                                          | manual/headed run with real pointer                                                                                 | none (identity known via editor)     |
+| Delete of recurring instance / guest event; undo                                                                                                                                                                                      | delete fixtures, observe dialogs                                                                                    | Phase 3 lifecycle                    |
+| Narrow window / mobile layout, RTL & CJK locales, non-Gregorian                                                                                                                                                                       | resize + `?hl=ar/he/ja` pass                                                                                        | selector ranking                     |
+| Extension-URL images / web-accessible resources under page CSP                                                                                                                                                                        | inject `<img src=chrome-extension://…>`                                                                             | badge icons                          |
+| `Router.goto` feasibility                                                                                                                                                                                                             | synthetic `pushState`+`popstate` in isolated world vs MAIN                                                          | LATER                                |
+| Event id position in network responses                                                                                                                                                                                                | capture range containing fixtures                                                                                   | canary only                          |
+| Firefox/Safari fallback path (no Navigation API)                                                                                                                                                                                      | smoke                                                                                                               | support matrix                       |
+| Calendar API leg of identity: does `events.get` accept `<id>_<UTC start>` instance ids and the `data-eventid` base id? **No API call has been made**                                                                                  | one authenticated `events.get`/`instances` call against the test account (requires an OAuth token — owner decision) | `dataProvider` correlation (Phase 4) |
+| Does `#xTimezone` track the primary-tz setting live or only at load?                                                                                                                                                                  | change primary tz in-app, re-read `#xTimezone` without reload                                                       | `User.getTimeZone()`                 |
 
 ## 16. Project setup, packaging and support policy
 

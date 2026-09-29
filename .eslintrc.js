@@ -64,14 +64,14 @@ module.exports = {
       },
     },
     {
-      // SDK code only (build tooling under src/build legitimately uses .write()).
-      files: ['src/**'],
-      excludedFiles: ['*.test.*', '*.d.ts', 'src/build/**'],
+      // MAIN-world (page-injected) code only: Google Calendar enforces
+      // `require-trusted-types-for 'script'` there, whereas a real MV3 content script
+      // is exempt (docs/calendar-reverse-engineering.md §1.18).
+      files: ['src/injected-js/**'],
+      excludedFiles: ['*.test.*', '*.d.ts'],
       rules: {
-        // Google Calendar enforces `require-trusted-types-for 'script'`, so HTML
-        // strings cannot be assigned to DOM sinks (docs/calendar-reverse-engineering.md
-        // §1.18). Build DOM with createElement/textContent/setAttribute, or go
-        // through one Trusted Types policy helper (which may disable this rule).
+        // HTML strings cannot be assigned to DOM sinks in page-world code; build DOM
+        // with createElement/textContent/setAttribute or a Trusted Types policy helper.
         'no-restricted-syntax': [
           'error',
           {

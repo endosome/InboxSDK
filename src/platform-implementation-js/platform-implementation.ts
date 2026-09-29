@@ -4,6 +4,11 @@ import { reportError, reportEvent, setReporter } from './lib/reporter';
 import type { AppLogger, Reporter } from './lib/reporter';
 import type { Driver } from './driver-interfaces/driver';
 import CalendarDriver from './dom-driver/google-calendar/calendar-driver';
+import CalendarRouteViewDriver from './dom-driver/google-calendar/views/calendar-route-view-driver';
+import Membrane from './lib/Membrane';
+import RouteView from './views/route-view/route-view';
+import Router from './namespaces/router';
+import User from './namespaces/user';
 import type { SelectorOverrides } from './dom-driver/google-calendar/selectors';
 import type { InvalidSelectorReporter } from './lib/dom/mergeSelectorOverrides';
 
@@ -21,6 +26,8 @@ export type PiOpts = {
   onInvalidSelector?: InvalidSelectorReporter;
   /** Where diagnostics go; defaults to the console. Nothing is sent anywhere. */
   reporter?: Reporter;
+  /** How long to wait for Calendar to render before load() rejects (default 15000). */
+  readyTimeoutMs?: number;
   REQUESTED_API_VERSION: number;
   VERSION: string;
 };
@@ -30,6 +37,8 @@ export class PlatformImplementation extends SafeEventEmitter {
   readonly LOADER_VERSION: string;
   readonly IMPL_VERSION: string = BUILD_VERSION;
   readonly Logger: AppLogger;
+  readonly Router: Router;
+  readonly User: User;
   readonly #driver: Driver;
 
   constructor(driver: Driver, opts: PiOpts) {
@@ -40,7 +49,12 @@ export class PlatformImplementation extends SafeEventEmitter {
       error: (err, details) => reportError(err, details),
       event: (name, details) => reportEvent(name, details),
     };
-    // Namespaces (Router, Events, User, ...) are added per phase.
+    const membrane = new Membrane([
+      [CalendarRouteViewDriver, (d) => new RouteView(d)],
+    ]);
+    this.Router = new Router(driver, membrane);
+    this.User = new User(driver);
+    // Events, Toolbar and Compat are added in later phases.
   }
 
   destroy() {
@@ -87,6 +101,13 @@ export function makePlatformImplementation(
   const driver = new CalendarDriver(opts.appId, {
     selectorOverrides: opts.selectorOverrides,
     onInvalidSelector: opts.onInvalidSelector,
+    readyTimeoutMs: opts.readyTimeoutMs,
   });
-  return Promise.resolve(new PlatformImplementation(driver, opts));
+  return driver.onready.then(
+    () => new PlatformImplementation(driver, opts),
+    (err) => {
+      driver.destroy();
+      throw err;
+    },
+  );
 }

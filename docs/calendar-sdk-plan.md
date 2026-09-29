@@ -163,8 +163,10 @@ interface EventPopoverView extends Emitter<{ destroy: void }> {
 enum RouteType { DAY='DAY', WEEK='WEEK', MONTH='MONTH', YEAR='YEAR', AGENDA='AGENDA',
                  CUSTOM_DAYS='CUSTOM_DAYS', SEARCH='SEARCH', EVENT_EDIT='EVENT_EDIT', SETTINGS='SETTINGS', UNKNOWN='UNKNOWN' }
 interface RouteView extends Emitter<{ destroy: void }> {
-  getType(): RouteType; getDateRange(): { start: string; end: string } | null;  // ISO dates
-  getSearchQuery(): string | null; getEventRef(): EventRef | null;              // EVENT_EDIT
+  getType(): RouteType;
+  getAnchorDate(): string | null;     // YYYY-MM-DD from the URL; null when dateless (e.g. after "Today"). The full range depends on week-start, so no getDateRange in V1
+  getSearchQuery(): string | null;
+  getEventRef(): EventRef | null;     // EVENT_EDIT; added with identity.ts in Phase 3
 }
 interface Router { getCurrentRouteView(): RouteView; registerRouteViewHandler(h): () => void;
                    goto(target: { type: RouteType; date?: string } | EventRef): void }   // goto = pushState + popstate LATER
@@ -491,18 +493,40 @@ lint:stylelint` (`--allow-empty-input`), grep gate for `GmailDriver|dom-driver/g
 isStreakAppId|data-inboxsdk-`empty; the built bundle was also loaded in jsdom (resolves on calendar origin, rejects elsewhere). _Deliberately deferred:_ pruning Gmail-only dependencies (react, page-parser-tree, order-manager, …) and`yarn.lock`; the `platform-implementation-js`directory name kept;`xhr-proxy-factory`
 kept dormant; the old README contribution guidelines were replaced, not ported.
 
-**Phase 2 — Calendar bootstrap.** _Goal:_ SDK loads on Calendar; route, root and
-user info work from a real content script. _Code:_ loader (`CalendarSDK.load`),
-`CalendarDriver` skeleton, `RouteService`, `user-info.ts`, `Router`/`User`
-namespaces. _Experiments:_ **first, a throwaway MV3 extension** (content script,
-no MAIN world) that logs Navigation-API events, reads `#xUserEmail`, appends one
-DOM-builder node and one Trusted-Types-policy node into a chip and observes
-`document.body` — closes the "CDP isolated world ≠ real content script" gap.
-_Deliverables:_ example extension logging `RouteType`/user on every navigation.
-_Tests:_ classifier table tests (§8), jsdom fallback test, extension smoke on
-live Calendar. _Risks:_ (retired by the smoke test, see Phase 2 status). _Exit:_
-correct `RouteType` for all verified views incl.
-back/forward/Today/settings/editor.
+**Phase 2 — Calendar bootstrap. DONE on branch `calendar-sdk-phase2`.** _Goal:_
+SDK loads on Calendar; route, root and user info work from a real content
+script. _Done:_ **first, the real-content-script smoke test**
+(`examples/calendar-smoke` +
+`tools/calendar-probe/experiments/extension-smoke.mjs`; branded Chrome ignores
+`--load-extension`, so the extension is loaded over CDP
+`Extensions.loadUnpacked`, which needs `--enable-unsafe-extension-debugging`).
+Results [V]: Navigation API `navigate` events, `#xUserInfo` reads,
+`body[data-viewkey]` tracking, MutationObserver, `<style>` and extension-URL
+images all work in a real content script; **Trusted Types do NOT apply to
+content scripts** (they do to page code and CDP-created worlds), so an earlier
+"critical" constraint was retracted and the ESLint HTML-sink ban narrowed to
+`src/injected-js/**`. Then: `RouteType`; pure `classifyRoute` (body key/family
+authoritative, URL supplies date/query and detects the URL-leads-DOM window);
+`RouteService` (Navigation API + popstate + body/title observers, waits up to
+`settleMs` while URL and DOM disagree, reports disagreements, works without the
+Navigation API); `readUserInfo`; `CalendarDriver` composing them (`onready`
+waits for `#xUserInfo`, rejects with a clear error after `readyTimeoutMs`);
+public `RouteView`, `Router` (`getCurrentRouteView`, `registerRouteViewHandler`,
+`RouteTypes`) and `User` (`getEmailAddress/getLanguage/getTimeZone`), built on
+`Membrane` + `HandlerRegistry`; `examples/calendar-hello` logs `RouteType` and
+user info. `RouteView.getDateRange` was replaced by `getAnchorDate` (the range
+depends on week-start). _Tests:_ 230 (187 → +43): classifier table incl.
+transition cases, `RouteService` with fake timers and a fake Navigation API,
+user-info, Router semantics (replay, destroy, unregister, throwing handlers),
+load smoke incl. timeout. _Live [V]_ (`extension-routes.mjs`, built SDK in real
+Chrome): correct sequence for next/prev week, `m d y a x w`, editor open/cancel,
+settings, `history.back`; a popover open emits no route; "Today" from the
+current week navigates nowhere and view-switch keys then yield **dateless** URLs
+(Calendar drops today's date), so `anchorDate === null` means "today/current".
+_Exit met:_ correct `RouteType` for all verified views incl.
+back/forward/settings/editor, from a real content script. _Not covered:_ Today
+navigating to a _different_ week is covered in `today.mjs` scratch only; Firefox
+fallback path is unit-tested only.
 
 **Phase 3 — `EventView` lifecycle.** _Goal:_ lifetime-bound `EventView` per
 eligible chip. _Code:_ `root-observer`, `event-registry`, `identity.ts` (decode,

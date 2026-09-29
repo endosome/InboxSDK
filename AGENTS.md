@@ -53,8 +53,11 @@ off: `yarn test`, `yarn lint`, `yarn typecheck` (after `yarn gulp`), and
 3. Open https://calendar.google.com while signed in and check the console for
    `CalendarSDK loaded`.
 
-For automated live investigation see `tools/calendar-probe/README.md` (uses a
-human-signed-in Chrome over CDP; use a dedicated test account).
+To load an example into a CDP-driven Chrome start it with
+`--enable-unsafe-extension-debugging` (branded Chrome ignores
+`--load-extension`); see `tools/calendar-probe/README.md`. For automated live
+investigation see `tools/calendar-probe/README.md` (uses a human-signed-in
+Chrome over CDP; use a dedicated test account).
 
 ### Gotchas
 

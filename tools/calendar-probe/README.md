@@ -18,3 +18,10 @@ before committing):
 - `routes.json`: URL / history / title after each navigation
 - `globals.json`: MAIN-world global names (keys only, no values) The probe only
   navigates and opens popovers (clicks a chip); it never edits or deletes.
+
+## Testing real extensions (Phase 2)
+
+Branded Chrome ignores `--load-extension`. Start Chrome with
+`--enable-unsafe-extension-debugging` and load extensions over CDP
+(`Extensions.loadUnpacked`), as `experiments/extension-smoke.mjs` and
+`experiments/extension-routes.mjs` do (run `yarn gulp` first).

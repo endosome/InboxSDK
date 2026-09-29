@@ -40,6 +40,7 @@ export const SELECTOR_SPECS: Record<CalendarSelectorKey, Spec> = {
   editorSave: { context: 'editor' },
   editorCancel: { context: 'editor' },
   appHeader: { context: 'grid' },
+  searchButton: { context: 'grid' },
 };
 
 const GRID_TYPES: ReadonlySet<RouteType> = new Set([

@@ -18,6 +18,11 @@ import type { GotoTarget } from './route-url';
 import RouteService from './services/route-service';
 import EventRegistry from './services/event-registry';
 import InjectionReconciler from './services/injection-reconciler';
+import ToolbarService from './services/toolbar-service';
+import type {
+  ToolbarButtonDescriptor,
+  ToolbarButtonHandle,
+} from '../../driver-interfaces/toolbar-driver';
 import CompatService from './services/compat-service';
 import type { CompatIssue, CompatReport } from '../../compat/types';
 import EditorService from './services/editor-service';
@@ -49,6 +54,7 @@ export default class CalendarDriver implements Driver {
   #popoverRegistry: PopoverRegistry | null = null;
   #editorService: EditorService | null = null;
   #compatService: CompatService | null = null;
+  #toolbarService: ToolbarService | null = null;
   #destroyed = false;
 
   constructor(appId: string, options: CalendarDriverOptions = {}) {
@@ -119,6 +125,12 @@ export default class CalendarDriver implements Driver {
       this.selectors,
     );
     this.#editorService.start();
+    this.#toolbarService = new ToolbarService({
+      document,
+      selectors: this.selectors,
+      appId: this.#appId,
+    });
+    this.#toolbarService.start();
     this.#compatService = new CompatService(document, this.selectors);
     this.#compatService.start(this.#routeService);
   }
@@ -190,6 +202,11 @@ export default class CalendarDriver implements Driver {
     return this.#editorService.subscribe(cb);
   }
 
+  addToolbarButton(descriptor: ToolbarButtonDescriptor): ToolbarButtonHandle {
+    if (!this.#toolbarService) throw new Error('CalendarDriver is not ready');
+    return this.#toolbarService.addButton(descriptor);
+  }
+
   getCompatReport(): CompatReport {
     if (!this.#compatService) throw new Error('CalendarDriver is not ready');
     return this.#compatService.getReport();
@@ -203,6 +220,7 @@ export default class CalendarDriver implements Driver {
   destroy(): void {
     this.#destroyed = true;
     this.#compatService?.stop();
+    this.#toolbarService?.stop();
     this.#editorService?.stop();
     this.#popoverRegistry?.stop();
     this.#reconciler?.stop();

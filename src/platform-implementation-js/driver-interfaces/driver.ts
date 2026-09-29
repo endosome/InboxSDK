@@ -1,6 +1,10 @@
 import type { Stopper } from 'kefir-stopper';
 import type { RouteViewDriver } from './route-view-driver';
 import type { EventViewDriver } from './event-view-driver';
+import type {
+  ToolbarButtonDescriptor,
+  ToolbarButtonHandle,
+} from './toolbar-driver';
 import type { GotoTarget } from '../dom-driver/google-calendar/route-url';
 import type { EventPopoverViewDriver } from './event-popover-view-driver';
 import type { CompatIssue, CompatReport } from '../compat/types';
@@ -53,6 +57,8 @@ export interface Driver {
   onEventEditorViewDriver(
     cb: (driver: EventEditorViewDriver) => void,
   ): () => void;
+  /** Add a button to Calendar's top bar. */
+  addToolbarButton(descriptor: ToolbarButtonDescriptor): ToolbarButtonHandle;
   /** Check the page against the selector registry now. */
   getCompatReport(): CompatReport;
   /** Called for each newly found problem. Returns an unsubscribe function. */

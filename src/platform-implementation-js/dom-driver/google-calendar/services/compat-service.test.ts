@@ -22,7 +22,7 @@ beforeEach(() => {
   document.body.setAttribute('data-viewfamily', 'EVENT');
   window.history.pushState({}, '', '/calendar/u/0/r/week/2026/9/30');
   document.body.innerHTML =
-    '<header id=gb role=banner></header><div id=yDmH0d></div><div role=main></div>';
+    '<header id=gb role=banner><div><span><button jsname=KzBUhd></button></span></div></header><div id=yDmH0d></div><div role=main></div>';
 });
 afterEach(() => jest.useRealTimers());
 

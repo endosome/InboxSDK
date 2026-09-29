@@ -13,6 +13,7 @@ import EventEditorView from './views/event-editor-view';
 import EventPopoverView from './views/event-popover-view';
 import RouteView from './views/route-view/route-view';
 import EventView from './views/event-view';
+import Toolbar from './namespaces/toolbar';
 import Data from './namespaces/data';
 import type { CalendarDataProvider } from './driver-interfaces/data-provider';
 import Compat from './namespaces/compat';
@@ -57,6 +58,7 @@ export class PlatformImplementation extends SafeEventEmitter {
   readonly User: User;
   readonly Compat: Compat;
   readonly Data: Data;
+  readonly Toolbar: Toolbar;
   readonly #driver: Driver;
 
   constructor(driver: Driver, opts: PiOpts) {
@@ -79,7 +81,7 @@ export class PlatformImplementation extends SafeEventEmitter {
     this.Compat = new Compat(driver);
     this.Data = new Data(opts.dataProvider);
     if (opts.onCompatIssue) this.Compat.onIssue(opts.onCompatIssue);
-    // Toolbar is added in a later phase.
+    this.Toolbar = new Toolbar(driver);
   }
 
   destroy() {

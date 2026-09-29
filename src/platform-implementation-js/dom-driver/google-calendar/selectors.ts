@@ -48,6 +48,11 @@ export const CALENDAR_SELECTORS = {
   ],
   editorSave: ['#xSaveBu', 'button[jsname=x8hlje]'],
   editorCancel: ['#xCancelBu', 'button[jsname=gQ2Xie]'],
+  /** Search button in the top bar: the toolbar buttons are placed just before it. */
+  searchButton: [
+    'header[role=banner] button[jsname=KzBUhd]',
+    'header[role=banner] button[aria-label=Search]', // locale-dependent: last
+  ],
   /** Top header bar. */
   appHeader: ['header#gb[role=banner]', 'header[role=banner]'],
 } as const satisfies Record<string, readonly string[]>;

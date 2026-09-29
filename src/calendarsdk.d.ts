@@ -269,6 +269,25 @@ export interface EventEditorView {
   on(event: 'destroy', listener: () => void): this;
 }
 
+export interface ToolbarButtonDescriptor {
+  /** Tooltip and accessible name. */
+  title: string;
+  /** `data:`, `chrome-extension://` (web-accessible) or https icon URL. */
+  iconUrl: string;
+  onClick: () => void;
+}
+
+export interface ToolbarButtonHandle {
+  update(changes: Partial<ToolbarButtonDescriptor>): void;
+  remove(): void;
+}
+
+/** Calendar's top bar. */
+export interface Toolbar {
+  /** Add an icon button next to Search; the SDK keeps it in place across re-renders. */
+  addButton(descriptor: ToolbarButtonDescriptor): ToolbarButtonHandle;
+}
+
 export interface Events {
   /**
    * Called for every chip already on the page and every later one; returns an
@@ -298,6 +317,7 @@ export interface CalendarSDK {
   readonly User: User;
   readonly Compat: Compat;
   readonly Data: Data;
+  readonly Toolbar: Toolbar;
   readonly LOADER_VERSION: string;
   readonly IMPL_VERSION: string;
   readonly Logger: AppLogger;

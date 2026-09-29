@@ -37,6 +37,8 @@ function describe(el: Element, depth: number): string {
   if (depth <= 0 || el.children.length === 0) return head;
   const kids: string[] = [];
   for (const child of el.children) {
+    // nodes injected by any CalendarSDK app are not Calendar's structure
+    if (child.hasAttribute('data-calsdk-owned')) continue;
     const d = describe(child, depth - 1);
     // a repeated identical sibling (list rows, chips) counts once
     if (kids[kids.length - 1] !== d) kids.push(d);

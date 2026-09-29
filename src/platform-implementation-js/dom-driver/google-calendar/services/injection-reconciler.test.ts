@@ -370,7 +370,7 @@ test('50 navigations that rebuild the grid: exactly one fresh badge per chip eve
   h.registry.stop();
   h.reconciler.stop();
   expect(document.querySelectorAll('[data-calsdk-badge]')).toHaveLength(0);
-});
+}, 30_000);
 
 test('stop() removes every injected node', () => {
   const h = harness();

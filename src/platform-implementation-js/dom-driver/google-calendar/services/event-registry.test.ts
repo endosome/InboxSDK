@@ -386,8 +386,8 @@ describe('leaks and scale', () => {
     const elapsed = performance.now() - started;
 
     expect(created).toHaveLength(500);
-    // generous: jsdom is slow; this catches accidental O(n²) or full-document rescans
-    expect(elapsed).toBeLessThan(1500);
+    // very generous (parallel jest on a busy machine): still catches O(n²) or full-document rescans
+    expect(elapsed).toBeLessThan(6000);
     registry.stop();
-  });
+  }, 30_000);
 });

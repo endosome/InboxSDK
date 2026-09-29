@@ -934,3 +934,12 @@ Calendar's popover state — both happen without any SDK.
   full page load.
 - Calendar writes dates unpadded (`/2026/9/30`) and may drop them from the URL
   of the view it lands on (`/r/week`).
+
+### 1.23 Top bar structure [V: `extension-toolbar.mjs`]
+
+`header[role=banner]` … `div[jsname=h04Zod]` (block; line box 40 px) > `span` >
+`button[jsname=KzBUhd][aria-label=Search]` (40×40 at y=12 in a 64 px bar).
+Siblings to the right: Support (`jsname=M842Cd`), Settings menu, view switcher
+(`jsname=jnPWCc`), Calendar/Tasks switch, Upgrade. Injecting a sibling before
+the Search wrapper survives view switches, popovers and 50 navigations; the
+wrapper is hidden (0×0) on settings and search routes.

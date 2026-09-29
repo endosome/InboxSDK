@@ -20,7 +20,7 @@ function page(
 }
 
 const grid = (chips = 1) => `
-  <header id="gb" role="banner"></header>
+  <header id="gb" role="banner"><div><span><button jsname="KzBUhd"></button></span></div></header>
   <div id="yDmH0d"></div>
   <div role="main"><div data-datekey="1">
     ${Array.from(
@@ -197,6 +197,13 @@ describe('structure fingerprints', () => {
     expect(structureHash(a, 2)).not.toBe(
       structureHash(el('<div role=x><i><span jsname=1></span></i></div>'), 2),
     );
+  });
+  test('nodes injected by SDK apps do not change the fingerprint', () => {
+    const plain = el('<div><p></p></div>');
+    const injected = el(
+      '<div><div data-calsdk-owned="x"><button></button></div><p></p></div>',
+    );
+    expect(structureHash(injected, 3)).toBe(structureHash(plain, 3));
   });
   test('depth limits what counts', () => {
     const a = el('<div><p><i></i></p></div>');

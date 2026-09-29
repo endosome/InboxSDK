@@ -171,7 +171,7 @@ interface Router { getCurrentRouteView(): RouteView; registerRouteViewHandler(h)
                    goto(target: { type: 'DAY'|'WEEK'|'MONTH'|'YEAR'|'AGENDA'|'CUSTOM_DAYS'; date?: string }
                             | { type: 'SEARCH'; query: string } | EventRef): Promise<void> }   // DONE: pushState + popstate, no reload
 // ---- Toolbar / User / Compat
-interface Toolbar { addButton(d: { title: string; iconUrl: string; onClick(): void }): ButtonHandle }  // V1 NICE
+interface Toolbar { addButton(d: { title: string; iconUrl: string; onClick(): void }): ButtonHandle }  // DONE (Phase 9 coverage pass)
 interface User { getEmailAddress(): string; getLanguage(): string; getTimeZone(): string | null }
 interface Compat { getReport(): CompatReport; onIssue(h: (i: CompatIssue) => void): () => void }
 ```
@@ -727,6 +727,22 @@ Calendar's own `history.state` makes its router restore the old URL (use a fresh
 resolves when the route of the requested kind is emitted (rejects after 5 s),
 bad targets (impossible date, SETTINGS, task/birthday refs — tasks do not use
 the editor) reject without navigating.
+
+**`Toolbar.addButton` (done).** `services/toolbar-service`: a
+`div.calsdk-toolbar` container placed as the previous sibling of the wrapper of
+Calendar's Search button (`header button[jsname=KzBUhd]`), buttons in
+registration order, desired state re-applied from a mutation-observer microtask
+(also if the header is rebuilt), repair back-off if Calendar and the SDK ever
+fight. Round 40 px icon buttons (`vertical-align: top` matches Search's row —
+`middle` sat 4 px low), hover/focus styles neutral to light/dark. Pointer events
+contained; Enter activates, single-key shortcuts do not leak to Calendar,
+Escape/Tab pass. Live (`extension-toolbar.mjs`, 24 checks): one button just left
+of Search without overlap in week/month/day/schedule/N-days/year, after 50
+navigations and popover cycles, after settings, dark theme, 900/700/420 px; **0
+of 4149 grid frames** without it. On settings/search routes Calendar hides the
+Search wrapper, so the button is not visible there (present in the DOM). Compat:
+new key `searchButton`; SDK-injected nodes are ignored by the structure
+fingerprint.
 
 ## 13. Risks
 

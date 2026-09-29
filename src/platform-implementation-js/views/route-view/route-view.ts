@@ -1,5 +1,6 @@
 import SafeEventEmitter from '../../lib/safe-event-emitter';
 import type { RouteType } from '../../constants/router';
+import type { EventRef } from '../../driver-interfaces/event-view-driver';
 import type { RouteViewDriver } from '../../driver-interfaces/route-view-driver';
 
 /**
@@ -36,5 +37,13 @@ export default class RouteView extends SafeEventEmitter {
   /** The query of a `SEARCH` route, else null. */
   getSearchQuery(): string | null {
     return this.#driver.getSearchQuery();
+  }
+
+  /**
+   * On an `EVENT_EDIT` route of an existing item, which item; null for a new
+   * event and for every other route type.
+   */
+  getEventRef(): EventRef | null {
+    return this.#driver.getEventRef();
   }
 }

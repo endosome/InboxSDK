@@ -4,6 +4,14 @@ import Events from './events';
 import EventView from '../views/event-view';
 import EventPopoverView from '../views/event-popover-view';
 import CalendarEventPopoverViewDriver from '../dom-driver/google-calendar/views/calendar-event-popover-view-driver';
+import EventEditorView from '../views/event-editor-view';
+import CalendarEventEditorViewDriver from '../dom-driver/google-calendar/views/calendar-event-editor-view-driver';
+import SelectorRegistry from '../lib/dom/selectorRegistry';
+import {
+  CALENDAR_SELECTORS,
+  type CalendarSelectorKey,
+} from '../dom-driver/google-calendar/selectors';
+import type { EventEditorViewDriver } from '../driver-interfaces/event-editor-view-driver';
 import CalendarEventViewDriver from '../dom-driver/google-calendar/views/calendar-event-view-driver';
 import type { Driver } from '../driver-interfaces/driver';
 import type { EventPopoverViewDriver } from '../driver-interfaces/event-popover-view-driver';
@@ -44,6 +52,8 @@ function fakeDriver(initial: CalendarEventViewDriver[] = []) {
     getEventViewDrivers: () => existing,
     getEventPopoverViewDrivers: () => [],
     onEventPopoverViewDriver: () => () => undefined,
+    getEventEditorViewDrivers: () => [],
+    onEventEditorViewDriver: () => () => undefined,
     onEventViewDriver: (cb: (d: EventViewDriver) => void) => {
       subs.add(cb);
       return () => subs.delete(cb);
@@ -180,6 +190,8 @@ describe('popover handlers', () => {
       getStopper: () => stopper,
       getEventViewDrivers: () => [],
       onEventViewDriver: () => () => undefined,
+      getEventEditorViewDrivers: () => [],
+      onEventEditorViewDriver: () => () => undefined,
       getEventPopoverViewDrivers: () => initial,
       onEventPopoverViewDriver: (cb: (d: EventPopoverViewDriver) => void) => {
         subs.add(cb);
@@ -254,5 +266,86 @@ describe('popover handlers', () => {
     expect(() => view.addButton({ title: 'late', onClick })).toThrow(
       'destroyed',
     );
+  });
+});
+
+describe('editor handlers', () => {
+  const editorDriver = (eventId: string | null) =>
+    new CalendarEventEditorViewDriver(
+      eventId ? ref(eventId) : null,
+      kefirStopper(),
+      {
+        document,
+        selectors: new SelectorRegistry<CalendarSelectorKey>(
+          CALENDAR_SELECTORS,
+          {},
+        ),
+      },
+    );
+
+  function fakeEditorDriver(initial: CalendarEventEditorViewDriver[] = []) {
+    const subs = new Set<(d: EventEditorViewDriver) => void>();
+    const stopper = kefirStopper();
+    const driver = {
+      getStopper: () => stopper,
+      getEventViewDrivers: () => [],
+      onEventViewDriver: () => () => undefined,
+      getEventPopoverViewDrivers: () => [],
+      onEventPopoverViewDriver: () => () => undefined,
+      getEventEditorViewDrivers: () => initial,
+      onEventEditorViewDriver: (cb: (d: EventEditorViewDriver) => void) => {
+        subs.add(cb);
+        return () => subs.delete(cb);
+      },
+    } as unknown as Driver;
+    return {
+      driver,
+      stopper,
+      enter: (d: CalendarEventEditorViewDriver) => subs.forEach((cb) => cb(d)),
+    };
+  }
+
+  const membrane = () =>
+    new Membrane([
+      [CalendarEventEditorViewDriver, (d) => new EventEditorView(d)],
+    ]);
+
+  test('the current editor reaches a late handler; later editors too; new events have a null ref', async () => {
+    const { driver, enter } = fakeEditorDriver([editorDriver('a')]);
+    const events = new Events(driver, membrane());
+    const seen: (string | null)[] = [];
+    events.registerEventEditorHandler((v) =>
+      seen.push(v.getEventRef()?.eventId ?? null),
+    );
+    await flush();
+    enter(editorDriver(null));
+    enter(editorDriver('b'));
+    expect(seen).toEqual(['a', null, 'b']);
+  });
+
+  test('destroy fires with the route stopper and unregister works', async () => {
+    const { driver, enter } = fakeEditorDriver();
+    const events = new Events(driver, membrane());
+    const views: EventEditorView[] = [];
+    const off = events.registerEventEditorHandler((v) => views.push(v));
+    const stopper = kefirStopper();
+    const d = new CalendarEventEditorViewDriver(ref('a'), stopper, {
+      document,
+      selectors: new SelectorRegistry<CalendarSelectorKey>(
+        CALENDAR_SELECTORS,
+        {},
+      ),
+    });
+    enter(d);
+    await flush();
+    const onDestroy = jest.fn();
+    views[0].on('destroy', onDestroy);
+    stopper.destroy();
+    expect(onDestroy).toHaveBeenCalledTimes(1);
+    expect(views[0].destroyed).toBe(true);
+    off();
+    enter(editorDriver('c'));
+    await flush();
+    expect(views).toHaveLength(1);
   });
 });

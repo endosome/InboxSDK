@@ -12,6 +12,7 @@ function fakeDriver(type: RouteType = RouteType.WEEK) {
     type,
     anchorDate: null,
     searchQuery: null,
+    eventRawId: null,
   });
   const subs = new Set<(d: RouteViewDriver) => void>();
   const stopper = kefirStopper();
@@ -32,6 +33,7 @@ function fakeDriver(type: RouteType = RouteType.WEEK) {
         type: next,
         anchorDate: null,
         searchQuery: null,
+        eventRawId: null,
       });
       subs.forEach((cb) => cb(current));
     },

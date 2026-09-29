@@ -19,6 +19,8 @@ export type RouteDescriptor = {
   anchorDate: string | null;
   /** `q` of a search route. */
   searchQuery: string | null;
+  /** `EVENT_EDIT` of an existing item: the `data-eventid` token from the URL; else null. */
+  eventRawId: string | null;
 };
 
 export type Classification = {
@@ -73,9 +75,10 @@ function parseAnchorDate(rest: string | undefined): string | null {
 export function classifyPath(pathname: string): {
   type: RouteType | null;
   anchorDate: string | null;
+  eventRawId: string | null;
 } {
   const m = pathname.match(PATH_RE);
-  if (!m) return { type: null, anchorDate: null };
+  if (!m) return { type: null, anchorDate: null, eventRawId: null };
   const type = m[1] ? PATH_SEGMENT_TO_TYPE[m[1]] ?? null : null;
   const dated =
     type === RouteType.DAY ||
@@ -84,7 +87,14 @@ export function classifyPath(pathname: string): {
     type === RouteType.YEAR ||
     type === RouteType.AGENDA ||
     type === RouteType.CUSTOM_DAYS;
-  return { type, anchorDate: dated ? parseAnchorDate(m[2]) : null };
+  // /r/eventedit/<token>; `/r/eventedit?text=…` (a new event) has no token
+  const eventRawId =
+    type === RouteType.EVENT_EDIT && m[2] ? m[2].split('/')[0] || null : null;
+  return {
+    type,
+    anchorDate: dated ? parseAnchorDate(m[2]) : null,
+    eventRawId,
+  };
 }
 
 function typeFromBody(input: RouteInput): RouteType | null {
@@ -107,7 +117,16 @@ export function classifyRoute(input: RouteInput): Classification {
       ? new URLSearchParams(input.search).get('q')
       : null;
   return {
-    descriptor: { type, anchorDate: fromPath.anchorDate, searchQuery },
+    descriptor: {
+      type,
+      anchorDate: fromPath.anchorDate,
+      searchQuery,
+      // the body says EVENTEDIT but the URL may still be the previous page's: only trust a matching path
+      eventRawId:
+        type === RouteType.EVENT_EDIT && fromPath.type === type
+          ? fromPath.eventRawId
+          : null,
+    },
     // no path opinion (root/unknown path) or no body opinion => nothing to disagree about
     agrees:
       fromBody == null ||
@@ -119,5 +138,7 @@ export function classifyRoute(input: RouteInput): Classification {
 }
 
 export function routeKey(d: RouteDescriptor): string {
-  return `${d.type}|${d.anchorDate ?? ''}|${d.searchQuery ?? ''}`;
+  return `${d.type}|${d.anchorDate ?? ''}|${d.searchQuery ?? ''}|${
+    d.eventRawId ?? ''
+  }`;
 }

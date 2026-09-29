@@ -105,6 +105,26 @@ export function eventRefFromChip(chip: Element): EventRef | null {
   };
 }
 
+/**
+ * Ref for a token that did not come from a chip (the editor route). The full
+ * calendar id is unknown there, so `calendarId` is null.
+ */
+export function eventRefFromRawId(
+  rawId: string | null | undefined,
+): EventRef | null {
+  const decoded = decodeEventId(rawId);
+  if (!decoded) return null;
+  return {
+    eventId: decoded.eventId,
+    ...(decoded.instanceId !== undefined && { instanceId: decoded.instanceId }),
+    calendarId: null,
+    calendarIdHint: decoded.calendarIdHint,
+    kind: decoded.kind,
+    rawId: decoded.rawId,
+    confidence: 'exact',
+  };
+}
+
 /** Stable key for "the same calendar item": series/event id + instance + calendar. */
 export function eventRefKey(ref: EventRef): string {
   return `${ref.kind}|${ref.eventId}|${ref.instanceId ?? ''}|${

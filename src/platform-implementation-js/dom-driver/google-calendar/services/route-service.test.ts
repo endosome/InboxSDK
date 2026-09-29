@@ -205,3 +205,20 @@ test('a throwing subscriber does not break routing', async () => {
   errors.mockRestore();
   ctx.service.stop();
 });
+
+test('editor A → editor B is a new route with the new event ref', async () => {
+  const tokA = btoa('aaa111 owner@m').replace(/=+$/, '');
+  const tokB = btoa('bbb222 owner@m').replace(/=+$/, '');
+  const ctx = setup(
+    `/calendar/u/0/r/eventedit/${tokA}`,
+    'EVENTEDIT',
+    'EVENT_EDIT',
+  );
+  const first = ctx.service.start();
+  expect(first.getEventRef()?.eventId).toBe('aaa111');
+  const seen: string[] = [];
+  ctx.service.subscribe((d) => seen.push(d.getEventRef()?.eventId ?? '-'));
+  await navigateTo(ctx, `/calendar/u/0/r/eventedit/${tokB}`, 'EVENTEDIT');
+  expect(seen).toEqual(['bbb222']);
+  expect(first.getStopper().stopped).toBe(true);
+});

@@ -88,6 +88,7 @@ describe('dates and queries come from the URL', () => {
     expect(classifyPath('/calendar/r/month/2026/1/2')).toEqual({
       type: RouteType.MONTH,
       anchorDate: '2026-01-02',
+      eventRawId: null,
     });
   });
 
@@ -145,9 +146,50 @@ test('routeKey differs when type, date or query differ', () => {
     type: RouteType.WEEK,
     anchorDate: '2026-09-30',
     searchQuery: null,
+    eventRawId: null,
   };
   expect(routeKey(a)).toBe(routeKey({ ...a }));
   expect(routeKey(a)).not.toBe(routeKey({ ...a, anchorDate: '2026-10-07' }));
   expect(routeKey(a)).not.toBe(routeKey({ ...a, type: RouteType.MONTH }));
   expect(routeKey(a)).not.toBe(routeKey({ ...a, searchQuery: 'x' }));
+  expect(routeKey(a)).not.toBe(routeKey({ ...a, eventRawId: 'abc' }));
+});
+
+describe('editor route identity', () => {
+  const editor = (path: string, key: string | null = 'EVENTEDIT') =>
+    classifyRoute(input(path, key, key ? 'EVENT_EDIT' : null)).descriptor;
+
+  test('takes the token from /r/eventedit/<token>', () => {
+    expect(editor('/calendar/u/0/r/eventedit/abc_DEF-1').eventRawId).toBe(
+      'abc_DEF-1',
+    );
+    expect(editor('/calendar/r/eventedit/tok/').eventRawId).toBe('tok');
+  });
+
+  test('a new-event editor (/r/eventedit?text=…) has no token', () => {
+    const d = classifyRoute({
+      pathname: '/calendar/u/0/r/eventedit',
+      search: '?text=x',
+      viewKey: 'EVENTEDIT',
+      viewFamily: 'EVENT_EDIT',
+    }).descriptor;
+    expect(d.type).toBe(RouteType.EVENT_EDIT);
+    expect(d.eventRawId).toBeNull();
+  });
+
+  test('other routes never carry a token', () => {
+    expect(
+      classifyRoute(input('/calendar/u/0/r/week/2026/9/30', 'WEEK', 'EVENT'))
+        .descriptor.eventRawId,
+    ).toBeNull();
+  });
+
+  test('no token while the URL still shows the previous page', () => {
+    // body already says EVENTEDIT, URL not yet updated
+    expect(
+      classifyRoute(
+        input('/calendar/u/0/r/week/2026/9/30', 'EVENTEDIT', 'EVENT_EDIT'),
+      ).descriptor.eventRawId,
+    ).toBeNull();
+  });
 });

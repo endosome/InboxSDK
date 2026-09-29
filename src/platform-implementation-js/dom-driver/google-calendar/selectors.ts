@@ -41,8 +41,13 @@ export const CALENDAR_SELECTORS = {
     '[role=dialog] button[aria-label="Delete event"]',
   ],
   /** Editor route controls. */
-  editorSave: ['[jsname=x8hlje]'],
-  editorCancel: ['[jsname=gQ2Xie]'],
+  // NOT `input[jsname=YPqjbf]`: that jsname is shared by every text input on the page.
+  editorTitle: [
+    'input#xTiIn',
+    'input[aria-label=Title]', // locale-dependent: last
+  ],
+  editorSave: ['#xSaveBu', 'button[jsname=x8hlje]'],
+  editorCancel: ['#xCancelBu', 'button[jsname=gQ2Xie]'],
   /** Top header bar. */
   appHeader: ['header#gb[role=banner]', 'header[role=banner]'],
 } as const satisfies Record<string, readonly string[]>;

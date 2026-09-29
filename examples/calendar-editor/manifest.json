@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "CalendarSDK editor example",
+  "version": "0.0.1",
+  "description": "Logs the event editor's lifetime, title changes and Save clicks on Google Calendar.",
+  "content_scripts": [
+    {
+      "matches": ["https://calendar.google.com/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}

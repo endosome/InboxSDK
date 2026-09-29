@@ -630,10 +630,27 @@ the SDK); after the quick-create checks the view keys were swallowed until a
 reload (harness workaround). _Exit met:_ button on every popover kind, removed
 on close, click gets the right `EventRef`.
 
-**Phase 7 — Editor.** _Goal:_ `EVENT_EDIT` route + `EventEditorView` (observe
-title/save only). _Code:_ `editor-watcher`. _Tests:_ lifetime = route lifetime;
-guest/recurring confirm dialogs not mistaken for the editor. _Exit:_ view
-created/destroyed with the route.
+**Phase 7 — Editor. DONE on branch `calendar-sdk-phase7`.** _Goal:_ `EVENT_EDIT`
+route + `EventEditorView`. _Code:_ `RouteView.getEventRef()` (token parsed from
+`/r/eventedit/<token>`, `null` for a new event and other routes; `routeKey`
+includes it so editor A → editor B is a new route), `services/editor-service`,
+`views/calendar-event-editor-view-driver`, `EventEditorView`,
+`Events.registerEventEditorHandler`. **The editor view is derived from the
+route, not from editor DOM:** created when an `EVENT_EDIT` route starts, its
+stopper _is_ the route's, so dialogs over the editor cannot create or end it.
+Observed: `getTitle()` (live lookup), `titleChange`, `saveClicked` — named for
+what is observable: it does NOT mean the event was saved (guest / recurring
+dialogs follow; the user can back out), and Save via keyboard is not observed.
+_Selector correction:_ `jsname=YPqjbf` is shared by all text inputs; title is
+`input#xTiIn`, save `#xSaveBu`, cancel `#xCancelBu`. _Live test_
+(`extension-editor.mjs`, 19 checks, 0 fail, fixtures unchanged): from popover
+Edit, direct URL, back/forward (fresh editor on forward), new event (null ref),
+recurring scope dialog and guest "send invitations?" dialog (editor survives,
+same instance after "Back to editing"), "Discard unsaved changes?"
+(`role=alertdialog`) on Cancel. _Task and birthday:_ a task popover's Edit does
+not navigate to `/r/eventedit` (no editor view); birthdays have no Edit. _Not
+covered:_ Workspace calendars, non-English locales, editor for a shared-calendar
+event without write access. _Exit met:_ view created/destroyed with the route.
 
 **Phase 8 — Compatibility infrastructure (parallel).** _Goal:_ detect Google
 changes before users do. _Code:_ `compat/` library shared by the CDP runner and

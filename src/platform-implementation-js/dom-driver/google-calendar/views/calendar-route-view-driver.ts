@@ -3,6 +3,8 @@ import type { Stopper } from 'kefir-stopper';
 import type { RouteViewDriver } from '../../../driver-interfaces/route-view-driver';
 import type { RouteType } from '../../../constants/router';
 import type { RouteDescriptor } from '../route-classifier';
+import type { EventRef } from '../../../driver-interfaces/event-view-driver';
+import { eventRefFromRawId } from '../identity';
 
 /** One Calendar route (page). Destroyed when the route changes. */
 export default class CalendarRouteViewDriver implements RouteViewDriver {
@@ -23,6 +25,15 @@ export default class CalendarRouteViewDriver implements RouteViewDriver {
 
   getSearchQuery(): string | null {
     return this.#descriptor.searchQuery;
+  }
+
+  getEventRef(): EventRef | null {
+    return eventRefFromRawId(this.#descriptor.eventRawId);
+  }
+
+  /** The descriptor this route was built from (used to spot editor routes). */
+  getDescriptor(): RouteDescriptor {
+    return this.#descriptor;
   }
 
   getStopper(): Stopper {

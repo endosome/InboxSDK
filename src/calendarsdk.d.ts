@@ -47,6 +47,8 @@ export interface RouteView {
   getAnchorDate(): string | null;
   /** The query of a SEARCH route, else null. */
   getSearchQuery(): string | null;
+  /** On an EVENT_EDIT route of an existing item, which item; else null. */
+  getEventRef(): EventRef | null;
   on(event: 'destroy', listener: () => void): this;
 }
 
@@ -139,6 +141,23 @@ export interface EventPopoverView {
   on(event: 'destroy', listener: () => void): this;
 }
 
+/**
+ * The full-page event editor; lives exactly as long as the EVENT_EDIT route.
+ * `saveClicked` means the Save button was clicked, not that the event was
+ * saved (Calendar may still ask about guests or the recurring scope).
+ */
+export interface EventEditorView {
+  readonly destroyed: boolean;
+  /** The item being edited; null when creating a new event. */
+  getEventRef(): EventRef | null;
+  isNewEvent(): boolean;
+  /** Current text of the title field, or null while it is not on the page. */
+  getTitle(): string | null;
+  on(event: 'titleChange', listener: (title: string) => void): this;
+  on(event: 'saveClicked', listener: () => void): this;
+  on(event: 'destroy', listener: () => void): this;
+}
+
 export interface Events {
   /**
    * Called for every chip already on the page and every later one; returns an
@@ -155,6 +174,10 @@ export interface Events {
   registerEventPopoverHandler(
     handler: (popoverView: EventPopoverView) => void,
     options?: { kinds?: EventKind[] },
+  ): () => void;
+  /** Called for the current editor route and every later one; returns an unregister function. */
+  registerEventEditorHandler(
+    handler: (editorView: EventEditorView) => void,
   ): () => void;
 }
 

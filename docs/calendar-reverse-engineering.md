@@ -829,8 +829,8 @@ generated class (never use).
 | `popoverDeleteButton`               | `button[jsname=VkLyEc]`, `button[aria-label="Delete event"]`                                                                       | B, C                | [V] (absent on read-only shared)         |
 | `popoverRsvpYes/No/Maybe`           | `button[jsname=lezaG]` / `TtJ8Me` / `EVpSp` (invitee only)                                                                         | B                   | [V]                                      |
 | `taskMarkDone`                      | `button[jsname=xFuBUb]` in a task popover                                                                                          | B                   | [V]                                      |
-| `editorTitle`                       | `input[aria-label=Title]`, `input[jsname=YPqjbf]`                                                                                  | C, B                | [V] en                                   |
-| `editorSave` / `editorCancel`       | `[jsname=x8hlje]` / `[jsname=gQ2Xie]`                                                                                              | B                   | [V]                                      |
+| `editorTitle`                       | `input#xTiIn`, `input[aria-label=Title]` — **`jsname=YPqjbf` is shared by every text input on the page, do not use it**            | C, B                | [V] en                                   |
+| `editorSave` / `editorCancel`       | `#xSaveBu` / `#xCancelBu`, then `button[jsname=x8hlje]` / `button[jsname=gQ2Xie]`                                                  | B                   | [V]                                      |
 | `editorAllDay`                      | `input[aria-label="All day"]`                                                                                                      | C                   | [V] en only                              |
 | `appHeader`                         | `header#gb[role=banner]`                                                                                                           | A/B                 | [V]                                      |
 | `todayButton`                       | `header button[jsname=P6mm8]`                                                                                                      | B                   | [V] (label `Today, <date>` locale)       |
@@ -893,3 +893,17 @@ footer). The holder is the identity source and the injection parent. Calendar
 strips injected children when it re-renders the popover; the holder persists.
 Escape does not close a Space-opened popover and rapid click/Escape can desync
 Calendar's popover state — both happen without any SDK.
+
+### 1.20 Editor page [V: `extension-editor.mjs`]
+
+- Title `input#xTiIn` (`aria-label=Title`), Save `button#xSaveBu`, Cancel
+  `button#xCancelBu`. `jsname=YPqjbf` matches **13 inputs** on the editor and
+  the sidebar's people search on the grid — never use it as the title key.
+- Save on an edited recurring instance opens the scope dialog; on an event with
+  guests, the "send invitation emails?" dialog. The editor route and
+  `body[data-viewkey=EVENTEDIT]` stay throughout. Cancel on an edited (or
+  prefilled) editor opens `role=alertdialog` "Discard unsaved changes?" with
+  Cancel / Discard.
+- Save with no dialog returns to the grid (`/r`, WEEK) and ends the route.
+- A task popover's "Edit" does not navigate to `/r/eventedit` (URL unchanged);
+  birthdays have no Edit.

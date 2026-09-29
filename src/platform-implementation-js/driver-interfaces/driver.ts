@@ -2,6 +2,7 @@ import type { Stopper } from 'kefir-stopper';
 import type { RouteViewDriver } from './route-view-driver';
 import type { EventViewDriver } from './event-view-driver';
 import type { EventPopoverViewDriver } from './event-popover-view-driver';
+import type { EventEditorViewDriver } from './event-editor-view-driver';
 
 export type UserInfo = {
   emailAddress: string;
@@ -41,6 +42,12 @@ export interface Driver {
   /** Called for each popover that opens later. Returns an unsubscribe function. */
   onEventPopoverViewDriver(
     cb: (driver: EventPopoverViewDriver) => void,
+  ): () => void;
+  /** The editor of the current `EVENT_EDIT` route, if that is the route. */
+  getEventEditorViewDrivers(): EventEditorViewDriver[];
+  /** Called for each editor route entered later. Returns an unsubscribe function. */
+  onEventEditorViewDriver(
+    cb: (driver: EventEditorViewDriver) => void,
   ): () => void;
   destroy(): void;
 }

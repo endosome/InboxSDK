@@ -3,6 +3,7 @@ import type { Stopper } from 'kefir-stopper';
 import type { Driver, UserInfo } from '../../driver-interfaces/driver';
 import type { RouteViewDriver } from '../../driver-interfaces/route-view-driver';
 import type { EventViewDriver } from '../../driver-interfaces/event-view-driver';
+import type { EventEditorViewDriver } from '../../driver-interfaces/event-editor-view-driver';
 import type { EventPopoverViewDriver } from '../../driver-interfaces/event-popover-view-driver';
 import SelectorRegistry from '../../lib/dom/selectorRegistry';
 import type { InvalidSelectorReporter } from '../../lib/dom/mergeSelectorOverrides';
@@ -16,6 +17,7 @@ import {
 import RouteService from './services/route-service';
 import EventRegistry from './services/event-registry';
 import InjectionReconciler from './services/injection-reconciler';
+import EditorService from './services/editor-service';
 import PopoverRegistry from './services/popover-registry';
 import { readUserInfo } from './services/user-info';
 
@@ -42,6 +44,7 @@ export default class CalendarDriver implements Driver {
   #eventRegistry: EventRegistry | null = null;
   #reconciler: InjectionReconciler | null = null;
   #popoverRegistry: PopoverRegistry | null = null;
+  #editorService: EditorService | null = null;
   #destroyed = false;
 
   constructor(appId: string, options: CalendarDriverOptions = {}) {
@@ -106,6 +109,12 @@ export default class CalendarDriver implements Driver {
           ?.getEventRef().calendarId ?? null,
     });
     this.#popoverRegistry.start();
+    this.#editorService = new EditorService(
+      this.#routeService,
+      document,
+      this.selectors,
+    );
+    this.#editorService.start();
   }
 
   getAppId(): string {
@@ -153,8 +162,21 @@ export default class CalendarDriver implements Driver {
     return this.#popoverRegistry.subscribe(cb);
   }
 
+  getEventEditorViewDrivers(): EventEditorViewDriver[] {
+    if (!this.#editorService) throw new Error('CalendarDriver is not ready');
+    return this.#editorService.getAll();
+  }
+
+  onEventEditorViewDriver(
+    cb: (driver: EventEditorViewDriver) => void,
+  ): () => void {
+    if (!this.#editorService) throw new Error('CalendarDriver is not ready');
+    return this.#editorService.subscribe(cb);
+  }
+
   destroy(): void {
     this.#destroyed = true;
+    this.#editorService?.stop();
     this.#popoverRegistry?.stop();
     this.#reconciler?.stop();
     this.#eventRegistry?.stop();

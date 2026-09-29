@@ -15,6 +15,7 @@ import {
 function setup(
   appId = 'app-a',
   lookupCalendarId?: (id: string) => string | null,
+  resolveCalendarId?: (hint: string) => string | null,
 ) {
   renderShell();
   const selectors = new SelectorRegistry<CalendarSelectorKey>(
@@ -25,6 +26,7 @@ function setup(
     selectors,
     appId,
     lookupCalendarId,
+    resolveCalendarId,
   });
   const created: CalendarEventPopoverViewDriver[] = [];
   const destroyed: CalendarEventPopoverViewDriver[] = [];
@@ -184,6 +186,21 @@ describe('discovery', () => {
     overlayHost().append(makePopover({ decoded: 'a owner@m' }));
     await flush();
     expect(created[0].getEventRef().calendarId).toBe('owner@gmail.com');
+    registry.stop();
+  });
+
+  test('without a chip of the same event, a learned calendar abbreviation gives a derived id (events only)', async () => {
+    const { registry, created } = setup('app-a', undefined, (hint) =>
+      hint === 'owner@m' ? 'owner@example.com' : null,
+    );
+    registry.start();
+    overlayHost().append(makePopover({ decoded: 'a owner@m' }));
+    overlayHost().append(makePopover({ decoded: 'zzz unknown@m' }));
+    await flush();
+    expect(created[0].getEventRef()).toMatchObject({
+      calendarId: 'owner@example.com',
+      confidence: 'derived',
+    });
     registry.stop();
   });
 

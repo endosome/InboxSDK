@@ -20,13 +20,14 @@ export type EditorEnv = {
 export default class CalendarEventEditorViewDriver
   implements EventEditorViewDriver
 {
-  readonly #ref: EventRef | null;
+  readonly #getRef: () => EventRef | null;
   readonly #stopper: Stopper;
   readonly #env: EditorEnv;
   readonly #cleanups = new Set<() => void>();
 
-  constructor(ref: EventRef | null, stopper: Stopper, env: EditorEnv) {
-    this.#ref = ref;
+  /** `getRef` is called per use: the calendar id of the ref can be learned after the editor opens. */
+  constructor(getRef: () => EventRef | null, stopper: Stopper, env: EditorEnv) {
+    this.#getRef = getRef;
     this.#stopper = stopper;
     this.#env = env;
     stopper.onValue(() => {
@@ -36,7 +37,7 @@ export default class CalendarEventEditorViewDriver
   }
 
   getEventRef(): EventRef | null {
-    return this.#ref;
+    return this.#getRef();
   }
 
   getTitle(): string | null {

@@ -2,6 +2,7 @@ import type { EventSegment } from '../../../driver-interfaces/event-view-driver'
 import type SelectorRegistry from '../../../lib/dom/selectorRegistry';
 import { reportError, reportEvent } from '../../../lib/reporter';
 import type { CalendarSelectorKey } from '../selectors';
+import type CalendarIdMap from './calendar-id-map';
 import { eventRefFromChip, eventRefKey } from '../identity';
 import type {
   BadgeDescriptor,
@@ -44,6 +45,7 @@ const MAX_REPORTED_TOKENS = 20;
  */
 export default class EventRegistry implements ViewHost {
   readonly #badges: BadgeHost;
+  readonly #idMap: CalendarIdMap | undefined;
   readonly #doc: Document;
   readonly #selectors: SelectorRegistry<CalendarSelectorKey>;
   readonly #entries = new Map<Element, CalendarEventViewDriver>();
@@ -56,7 +58,9 @@ export default class EventRegistry implements ViewHost {
     doc: Document,
     selectors: SelectorRegistry<CalendarSelectorKey>,
     badges: BadgeHost,
+    idMap?: CalendarIdMap,
   ) {
+    this.#idMap = idMap;
     this.#badges = badges;
     this.#doc = doc;
     this.#selectors = selectors;
@@ -174,6 +178,8 @@ export default class EventRegistry implements ViewHost {
     if (!raw) return null; // not set yet: it arrives as an attribute mutation
     const ref = eventRefFromChip(el);
     if (!ref) this.#reportUndecodable(raw);
+    else if (ref.calendarId)
+      this.#idMap?.learn(ref.calendarIdHint, ref.calendarId);
     return ref;
   }
 

@@ -2,7 +2,6 @@ import { RouteType } from '../../../constants/router';
 import { reportError } from '../../../lib/reporter';
 import type SelectorRegistry from '../../../lib/dom/selectorRegistry';
 import type { CalendarSelectorKey } from '../selectors';
-import { eventRefFromRawId } from '../identity';
 import type RouteService from './route-service';
 import type CalendarRouteViewDriver from '../views/calendar-route-view-driver';
 import CalendarEventEditorViewDriver from '../views/calendar-event-editor-view-driver';
@@ -55,11 +54,14 @@ export default class EditorService {
   #onRoute(route: CalendarRouteViewDriver, notify: boolean) {
     this.#current = null;
     if (route.getType() !== RouteType.EVENT_EDIT) return;
-    const ref = eventRefFromRawId(route.getDescriptor().eventRawId);
-    const driver = new CalendarEventEditorViewDriver(ref, route.getStopper(), {
-      document: this.#document,
-      selectors: this.#selectors,
-    });
+    const driver = new CalendarEventEditorViewDriver(
+      () => route.getEventRef(),
+      route.getStopper(),
+      {
+        document: this.#document,
+        selectors: this.#selectors,
+      },
+    );
     this.#current = driver;
     route.getStopper().onValue(() => {
       if (this.#current === driver) this.#current = null;

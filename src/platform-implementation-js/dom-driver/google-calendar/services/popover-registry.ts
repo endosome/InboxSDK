@@ -6,7 +6,7 @@ import type {
 import type SelectorRegistry from '../../../lib/dom/selectorRegistry';
 import { reportError } from '../../../lib/reporter';
 import type { CalendarSelectorKey } from '../selectors';
-import { eventRefFromChip } from '../identity';
+import { eventRefFromChip, withResolvedCalendarId } from '../identity';
 import CalendarEventPopoverViewDriver, {
   type PopoverHost,
 } from '../views/calendar-event-popover-view-driver';
@@ -36,6 +36,8 @@ export type PopoverRegistryEnv = {
   appId: string;
   /** Full calendar id of a chip with this `data-eventid`, if one is on the page. */
   lookupCalendarId?: (rawId: string) => string | null;
+  /** Full calendar id learned for a calendar abbreviation (result is `derived`). */
+  resolveCalendarId?: (calendarIdHint: string) => string | null;
 };
 
 /**
@@ -211,6 +213,7 @@ export default class PopoverRegistry implements PopoverHost {
     if (ref.calendarId === null) {
       const calendarId = this.#env.lookupCalendarId?.(ref.rawId) ?? null;
       if (calendarId) return { ...ref, calendarId };
+      return withResolvedCalendarId(ref, this.#env.resolveCalendarId);
     }
     return ref;
   }

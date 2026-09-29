@@ -114,6 +114,11 @@ await scenario('popover Edit', async (p) => {
     JSON.stringify(p.logs),
   );
   pass(editorAlive(p) === 1, 'popover Edit: exactly one editor alive');
+  pass(
+    p.logs.includes('CalendarSDK editor ref derived calendar-known'),
+    'popover Edit: the editor ref got its calendar id from the grid (derived)',
+    JSON.stringify(p.logs),
+  );
   // typing reports the title; nothing saved
   await p.locator('input#xTiIn').first().press('End');
   await p.keyboard.type('!');
@@ -145,6 +150,11 @@ await scenario('direct URL', async (p) => {
       (l) => l === `CalendarSDK editor open event ${decodeId(raw)} -`,
     ),
     'direct URL: editor opens with the right ref',
+    JSON.stringify(p.logs),
+  );
+  pass(
+    p.logs.includes('CalendarSDK editor ref exact calendar-null'),
+    'direct URL: no grid chips were seen, so the calendar id stays null (never guessed)',
     JSON.stringify(p.logs),
   );
   await cancelEditor(p);

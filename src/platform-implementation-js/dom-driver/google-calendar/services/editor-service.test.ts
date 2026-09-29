@@ -183,3 +183,24 @@ test('a throwing listener does not break others', () => {
   input.dispatchEvent(new Event('input', { bubbles: true }));
   expect(seen).toEqual(['x']);
 });
+
+test('the editor ref picks up a calendar id learned after the editor opened (derived)', () => {
+  let learned: string | null = null;
+  const r = new CalendarRouteViewDriver(
+    {
+      type: RouteType.EVENT_EDIT,
+      anchorDate: null,
+      searchQuery: null,
+      eventRawId: token('abc'),
+    },
+    (hint) => (hint === 'owner@m' ? learned : null),
+  );
+  const { service } = setup(r);
+  const d = service.getAll()[0];
+  expect(d.getEventRef()?.calendarId).toBeNull();
+  learned = 'owner@example.com';
+  expect(d.getEventRef()).toMatchObject({
+    calendarId: 'owner@example.com',
+    confidence: 'derived',
+  });
+});

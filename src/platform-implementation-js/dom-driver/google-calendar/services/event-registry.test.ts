@@ -2,6 +2,7 @@ import SelectorRegistry from '../../../lib/dom/selectorRegistry';
 import { setReporter } from '../../../lib/reporter';
 import { CALENDAR_SELECTORS, type CalendarSelectorKey } from '../selectors';
 import EventRegistry from './event-registry';
+import CalendarIdMap from './calendar-id-map';
 import CalendarEventViewDriver from '../views/calendar-event-view-driver';
 import {
   flush,
@@ -390,4 +391,25 @@ describe('leaks and scale', () => {
     expect(elapsed).toBeLessThan(6000);
     registry.stop();
   }, 30_000);
+});
+
+test('chips teach the calendar id map (plain events with a jslog id only)', () => {
+  const { main } = renderShell();
+  const selectors = new SelectorRegistry<CalendarSelectorKey>(
+    CALENDAR_SELECTORS,
+  );
+  const map = new CalendarIdMap();
+  const registry = new EventRegistry(document, selectors, noBadges, map);
+  main.append(
+    makeChip({ decoded: 'a owner@m', calendarId: 'owner@example.com' }),
+    makeChip({
+      token: 'ttb_' + tokenFor('t1 task@m'),
+      calendarId: 'ignored@example.com',
+    }),
+    makeChip({ decoded: 'b other@g' }), // no jslog id: nothing to learn
+  );
+  registry.start();
+  expect(map.resolve('owner@m')).toBe('owner@example.com');
+  expect(map.resolve('other@g')).toBeNull();
+  registry.stop();
 });

@@ -23,6 +23,8 @@ export type RouteServiceEnv = {
     addEventListener: Listener;
     removeEventListener: Listener;
   };
+  /** Full calendar id learned for an abbreviation, for editor refs. */
+  resolveCalendarId?: (calendarIdHint: string) => string | null;
   /** Pushes a URL and tells Calendar's router (default: `history.pushState` + a `popstate` event). */
   navigate?: (url: string) => void;
   /** URL and body attributes disagreed for longer than `settleMs`. */
@@ -218,7 +220,10 @@ export default class RouteService {
 
   #emit(descriptor: RouteDescriptor) {
     const previous = this.#current;
-    const next = new CalendarRouteViewDriver(descriptor);
+    const next = new CalendarRouteViewDriver(
+      descriptor,
+      this.#env.resolveCalendarId,
+    );
     this.#current = next;
     this.#currentKey = routeKey(descriptor);
     previous?.destroy();

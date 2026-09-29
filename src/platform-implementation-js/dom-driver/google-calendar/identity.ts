@@ -125,6 +125,21 @@ export function eventRefFromRawId(
   };
 }
 
+/**
+ * Fill in `calendarId` of a plain event from what the page has taught us about
+ * its calendar abbreviation. The result is `derived` (not read from this
+ * element). Tasks and birthdays are left alone: their abbreviation names the
+ * account, but which "calendar" they live on is not the same thing.
+ */
+export function withResolvedCalendarId(
+  ref: EventRef,
+  resolve: ((calendarIdHint: string) => string | null) | undefined,
+): EventRef {
+  if (ref.calendarId !== null || ref.kind !== 'event' || !resolve) return ref;
+  const calendarId = resolve(ref.calendarIdHint);
+  return calendarId ? { ...ref, calendarId, confidence: 'derived' } : ref;
+}
+
 /** Stable key for "the same calendar item": series/event id + instance + calendar. */
 export function eventRefKey(ref: EventRef): string {
   return `${ref.kind}|${ref.eventId}|${ref.instanceId ?? ''}|${

@@ -16,6 +16,8 @@ export type ChipOptions = {
   jsaction?: boolean;
   dragClass?: '2' | '6' | '9' | null;
   role?: string | null;
+  /** Full calendar id as in the chip's `jslog` (plain events only). */
+  calendarId?: string;
 };
 
 export function tokenFor(decoded: string): string {
@@ -30,6 +32,7 @@ export function makeChip(options: ChipOptions = {}): HTMLElement {
     jsaction = true,
     dragClass = '2',
     role = 'button',
+    calendarId,
   } = options;
   const el = document.createElement('div');
   el.setAttribute('data-eventchip', '');
@@ -39,6 +42,8 @@ export function makeChip(options: ChipOptions = {}): HTMLElement {
     el.setAttribute('jsaction', 'click:cOuCgd');
     el.setAttribute('data-keyboardactiontype', '0;1');
   }
+  if (calendarId)
+    el.setAttribute('jslog', `39857; 1:["${calendarId}",1]; track:click`);
   if (!omitId) el.setAttribute('data-eventid', token ?? tokenFor(decoded));
   return el;
 }

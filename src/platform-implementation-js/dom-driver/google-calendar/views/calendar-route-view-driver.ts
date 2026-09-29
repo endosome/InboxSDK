@@ -4,15 +4,23 @@ import type { RouteViewDriver } from '../../../driver-interfaces/route-view-driv
 import type { RouteType } from '../../../constants/router';
 import type { RouteDescriptor } from '../route-classifier';
 import type { EventRef } from '../../../driver-interfaces/event-view-driver';
-import { eventRefFromRawId } from '../identity';
+import { eventRefFromRawId, withResolvedCalendarId } from '../identity';
 
 /** One Calendar route (page). Destroyed when the route changes. */
 export default class CalendarRouteViewDriver implements RouteViewDriver {
   readonly #descriptor: RouteDescriptor;
   readonly #stopper: Stopper = kefirStopper();
 
-  constructor(descriptor: RouteDescriptor) {
+  readonly #resolveCalendarId:
+    | ((calendarIdHint: string) => string | null)
+    | undefined;
+
+  constructor(
+    descriptor: RouteDescriptor,
+    resolveCalendarId?: (calendarIdHint: string) => string | null,
+  ) {
     this.#descriptor = descriptor;
+    this.#resolveCalendarId = resolveCalendarId;
   }
 
   getType(): RouteType {
@@ -28,7 +36,9 @@ export default class CalendarRouteViewDriver implements RouteViewDriver {
   }
 
   getEventRef(): EventRef | null {
-    return eventRefFromRawId(this.#descriptor.eventRawId);
+    const ref = eventRefFromRawId(this.#descriptor.eventRawId);
+    // the calendar is learned from chips, which may render after the route starts: look it up per call
+    return ref && withResolvedCalendarId(ref, this.#resolveCalendarId);
   }
 
   /** The descriptor this route was built from (used to spot editor routes). */

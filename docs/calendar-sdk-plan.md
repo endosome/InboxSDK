@@ -561,14 +561,24 @@ accounts. _Exit met:_ 100 % of chips on the fixture weeks get the correct
 `EventRef` (views == eligible chips in every state tested); no leaked views;
 decode failure reports a `identity-decode-failed` event and emits no view.
 
-**Phase 4 — Identity hardening.** _Goal:_ trustworthy `calendarId`/kind across
-accounts. _Code:_ `CalendarIdMap`, `jslog` cross-check, optional `dataProvider`.
-_Experiments:_ Workspace account; `events.get` correlation call (needs an
-owner-provided token). _Deliverables:_ `EventRef.calendarId` resolution with
-`confidence`. _Tests:_ table §5 has no [X]; unit tests incl. synthetic
-custom-domain ids. _Risks:_ abbreviation table differs on Workspace. _Exit:_
+**Phase 4 — Identity hardening. PARTLY DONE (calendar-id map); the Workspace
+pass and the API correlation are still open.** _Goal:_ trustworthy
+`calendarId`/kind across accounts. _Done:_ `services/calendar-id-map` learns
+`<owner>@m` ↔ full id **at runtime** from plain-event chips (their `jslog` has
+the full id; no hard-coded suffix table); an abbreviation ever seen with two
+full ids is ambiguous and never resolves (`calendar-id-conflict` reported, no
+ids in it). It fills `calendarId` (marked `confidence: 'derived'`) for **plain
+events** whose element has none: popovers without a same-event chip, and the
+editor route's ref (looked up per call, so it improves once chips are seen).
+Tasks and birthdays are deliberately left `null` (their abbreviation names the
+account, not a calendar — live: both are `<owner>@m`, with no full id in their
+`jslog`). Live (`extension-editor.mjs`): editor opened from a popover →
+`derived` + known; opened by direct URL (no chips seen) → `null`, never guessed.
+_Open (needs the owner):_ a Workspace account (custom-domain / resource calendar
+ids, `@` suffixes other than the consumer ones), and one authenticated
+`events.get` / `api-correlate.mjs` run for the instance-id convention. _Exit:_
 Workspace pass + one API correlation check, or an explicit "unverified" note in
-the public docs.
+the public docs (README and getting-started already say so).
 
 **Phase 5 — Event UI (badges). DONE on branch `calendar-sdk-phase5`.** _Goal:_
 `EventView.addBadge`. _Done:_ `InjectionReconciler` (desired-state badges; a

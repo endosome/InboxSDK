@@ -8,6 +8,15 @@ CalendarSDK.load(1, { appId: 'calendar-editor' }).then((sdk) => {
       'CalendarSDK editor open',
       ref ? `${ref.kind} ${ref.eventId} ${ref.instanceId ?? '-'}` : 'new',
     );
+    // the calendar id of the edited event is learned from grid chips: known after in-app navigation
+    console.log(
+      'CalendarSDK editor ref',
+      ref
+        ? `${ref.confidence} ${
+            ref.calendarId ? 'calendar-known' : 'calendar-null'
+          }`
+        : 'new',
+    );
     editor.on('titleChange', (title) => {
       console.log('CalendarSDK editor title', title);
     });

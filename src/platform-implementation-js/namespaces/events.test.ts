@@ -272,7 +272,7 @@ describe('popover handlers', () => {
 describe('editor handlers', () => {
   const editorDriver = (eventId: string | null) =>
     new CalendarEventEditorViewDriver(
-      eventId ? ref(eventId) : null,
+      () => (eventId ? ref(eventId) : null),
       kefirStopper(),
       {
         document,
@@ -329,7 +329,7 @@ describe('editor handlers', () => {
     const views: EventEditorView[] = [];
     const off = events.registerEventEditorHandler((v) => views.push(v));
     const stopper = kefirStopper();
-    const d = new CalendarEventEditorViewDriver(ref('a'), stopper, {
+    const d = new CalendarEventEditorViewDriver(() => ref('a'), stopper, {
       document,
       selectors: new SelectorRegistry<CalendarSelectorKey>(
         CALENDAR_SELECTORS,

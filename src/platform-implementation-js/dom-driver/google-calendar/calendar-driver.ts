@@ -26,6 +26,7 @@ import type {
 import CompatService from './services/compat-service';
 import type { CompatIssue, CompatReport } from '../../compat/types';
 import EditorService from './services/editor-service';
+import CalendarIdMap from './services/calendar-id-map';
 import PopoverRegistry from './services/popover-registry';
 import { readUserInfo } from './services/user-info';
 
@@ -55,6 +56,7 @@ export default class CalendarDriver implements Driver {
   #editorService: EditorService | null = null;
   #compatService: CompatService | null = null;
   #toolbarService: ToolbarService | null = null;
+  readonly #idMap = new CalendarIdMap();
   #destroyed = false;
 
   constructor(appId: string, options: CalendarDriverOptions = {}) {
@@ -89,6 +91,7 @@ export default class CalendarDriver implements Driver {
       location,
       window,
       navigation: (globalThis as any).navigation,
+      resolveCalendarId: (hint) => this.#idMap.resolve(hint),
       onDisagreement: (input, descriptor) =>
         reportEvent('route-disagreement', { input, type: descriptor.type }),
     });
@@ -104,6 +107,7 @@ export default class CalendarDriver implements Driver {
       document,
       this.selectors,
       this.#reconciler,
+      this.#idMap,
     );
     this.#eventRegistry.start();
     this.#reconciler.start();
@@ -111,6 +115,7 @@ export default class CalendarDriver implements Driver {
       document,
       selectors: this.selectors,
       appId: this.#appId,
+      resolveCalendarId: (hint) => this.#idMap.resolve(hint),
       // a popover has no jslog: borrow the full calendar id from a chip of the same event
       lookupCalendarId: (rawId) =>
         this.#eventRegistry

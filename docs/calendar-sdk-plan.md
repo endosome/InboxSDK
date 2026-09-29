@@ -569,13 +569,41 @@ custom-domain ids. _Risks:_ abbreviation table differs on Workspace. _Exit:_
 Workspace pass + one API correlation check, or an explicit "unverified" note in
 the public docs.
 
-**Phase 5 — Event UI (badges).** _Goal:_ `EventView.addBadge`. _Code:_
-`injection-reconciler`, badge widget (DOM builders), CSS. _Experiments:_
-overlay-layer spike vs in-tree; extension-URL icons under page CSP.
-_Deliverables:_ badge API + example. _Tests:_ survives 50 navigations, popover
-open/close, drag, density/theme/tz changes; no duplicates/stale text. _Risks:_
-strips faster than reconcile (flicker). _Exit:_ the survival test, run in the
-real-browser suite.
+**Phase 5 — Event UI (badges). DONE on branch `calendar-sdk-phase5`.** _Goal:_
+`EventView.addBadge`. _Done:_ `InjectionReconciler` (desired-state badges; a
+single `childList` observer on `document.body`; a chip whose subtree changed —
+including our own node being stripped — is re-reconciled synchronously in the
+observer microtask, i.e. before the next paint; idempotent, own nodes ignored,
+per-`appId` ownership so several SDK instances coexist), badge DOM built with
+`createElement`/`textContent` (no HTML from the app), one shared `<style>` (dark
+translucent pill + white text: readable on light and dark themes, fixed 14 px so
+it ignores density), corner placement for absolutely positioned chips and inline
+placement for static schedule rows, click/mousedown/pointerdown/dblclick/
+contextmenu kept away from Calendar's delegated handlers (a badge click runs the
+app handler and does **not** open the popover), `BadgeHandle.update/remove`,
+cleanup on view destroy and `stop()`; `EventView.addBadge` (with
+`onClick(eventView)`), public types, `examples/calendar-badges`. _Decision:_
+**in-tree injection with the reconciler; the overlay-layer alternative is not
+needed for V1** — it is retained only as a fallback if Calendar ever strips
+faster than a microtask. _Bug found by the tests:_ keeping our container "last
+child" made two SDK instances re-order each other forever (infinite loop);
+removed. _Tests:_ 282 → 299 (repair after strip ×20, own-node removal, order of
+several badges, update/remove without stale text, cleanup, replaced chip, click
+isolation and error reporting, positioning, single style element, two apps, "DOM
+is quiet after settling" (no self-feeding), **50 navigations × 30 chips with
+exactly one fresh badge per chip every time**). _Live [V]_
+(`extension-badges.mjs`, real Chrome, plain-event chips only since the example
+uses the default kind): one badge per chip, none missing/duplicated/stray in the
+initial week, after **5 popover open/close cycles**, all view keys, **50
+navigations**, mid-drag and after a returned drag, **dark theme**, **compact
+density**, restored settings, month and schedule views; **per-frame meter: 0 of
+2841 frames had a chip (≥3 frames old) without its badge**; extension-URL icons
+load under the page CSP; badge click gave the right event and no popover. _Known
+cosmetics:_ in narrow week chips the corner badge covers part of the title text;
+placement can be refined later. _Not covered:_ badges on task/birthday views
+(mechanism identical), timezone change, Workspace. _Exit met:_ badge survives 50
+navigations + popover open/close + drag + resize-independent density/theme
+changes without duplicates or stale text.
 
 **Phase 6 — Popovers.** _Goal:_ `registerEventPopoverHandler` + `addButton`.
 _Code:_ `popover-watcher`, button widget. _Experiments:_ button placement
@@ -646,7 +674,7 @@ nightly job green for a week; broken-selector drill passes.
 | Timed → all-day drag gesture with real input                                                                                                                                                                                          | manual/headed run with real pointer                                                                                 | none (identity known via editor)     |
 | Delete of recurring instance / guest event; undo                                                                                                                                                                                      | delete fixtures, observe dialogs                                                                                    | Phase 3 lifecycle                    |
 | Narrow window / mobile layout, RTL & CJK locales, non-Gregorian                                                                                                                                                                       | resize + `?hl=ar/he/ja` pass                                                                                        | selector ranking                     |
-| Extension-URL images / web-accessible resources under page CSP                                                                                                                                                                        | inject `<img src=chrome-extension://…>`                                                                             | badge icons                          |
+| ~~Extension-URL images under page CSP~~ **Answered**: load fine (real content script)                                                                                                                                                 | `extension-smoke.mjs`, `extension-badges.mjs`                                                                       | —                                    |
 | `Router.goto` feasibility                                                                                                                                                                                                             | synthetic `pushState`+`popstate` in isolated world vs MAIN                                                          | LATER                                |
 | Event id position in network responses                                                                                                                                                                                                | capture range containing fixtures                                                                                   | canary only                          |
 | Firefox/Safari fallback path (no Navigation API)                                                                                                                                                                                      | smoke                                                                                                               | support matrix                       |

@@ -25,7 +25,10 @@ function viewDriver(eventId: string, kind: EventKind = 'event') {
   return new CalendarEventViewDriver(
     document.createElement('div'),
     ref(eventId, kind),
-    { getSegment: () => ({ index: 0, count: 1, isPrimary: true }) },
+    {
+      getSegment: () => ({ index: 0, count: 1, isPrimary: true }),
+      addBadge: () => ({ update: () => undefined, remove: () => undefined }),
+    },
   );
 }
 

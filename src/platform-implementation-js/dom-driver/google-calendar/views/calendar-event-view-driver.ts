@@ -1,27 +1,33 @@
 import kefirStopper from 'kefir-stopper';
 import type { Stopper } from 'kefir-stopper';
 import type {
+  BadgeDescriptor,
+  BadgeHandle,
   EventRef,
   EventSegment,
   EventViewDriver,
 } from '../../../driver-interfaces/event-view-driver';
 
-/** What a view driver needs from the registry that owns it. */
-export interface SegmentSource {
+/** What a view driver needs from the services that own it. */
+export interface ViewHost {
   getSegment(driver: CalendarEventViewDriver): EventSegment;
+  addBadge(
+    driver: CalendarEventViewDriver,
+    descriptor: BadgeDescriptor,
+  ): BadgeHandle;
 }
 
 /** One rendered chip of a calendar item. Lives as long as the chip shows that item. */
 export default class CalendarEventViewDriver implements EventViewDriver {
   readonly element: HTMLElement;
   readonly #ref: EventRef;
-  readonly #segments: SegmentSource;
+  readonly #host: ViewHost;
   readonly #stopper: Stopper = kefirStopper();
 
-  constructor(element: HTMLElement, ref: EventRef, segments: SegmentSource) {
+  constructor(element: HTMLElement, ref: EventRef, host: ViewHost) {
     this.element = element;
     this.#ref = ref;
-    this.#segments = segments;
+    this.#host = host;
   }
 
   getEventRef(): EventRef {
@@ -29,7 +35,7 @@ export default class CalendarEventViewDriver implements EventViewDriver {
   }
 
   getSegment(): EventSegment {
-    return this.#segments.getSegment(this);
+    return this.#host.getSegment(this);
   }
 
   /**
@@ -46,6 +52,10 @@ export default class CalendarEventViewDriver implements EventViewDriver {
       !this.element.hasAttribute('role') &&
       !this.element.closest('[data-datekey]')
     );
+  }
+
+  addBadge(descriptor: BadgeDescriptor): BadgeHandle {
+    return this.#host.addBadge(this, descriptor);
   }
 
   getStopper(): Stopper {

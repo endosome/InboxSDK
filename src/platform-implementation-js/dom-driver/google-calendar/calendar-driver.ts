@@ -14,6 +14,7 @@ import {
 } from './selectors';
 import RouteService from './services/route-service';
 import EventRegistry from './services/event-registry';
+import InjectionReconciler from './services/injection-reconciler';
 import { readUserInfo } from './services/user-info';
 
 export type CalendarDriverOptions = {
@@ -37,6 +38,7 @@ export default class CalendarDriver implements Driver {
   #userInfo: UserInfo | null = null;
   #routeService: RouteService | null = null;
   #eventRegistry: EventRegistry | null = null;
+  #reconciler: InjectionReconciler | null = null;
   #destroyed = false;
 
   constructor(appId: string, options: CalendarDriverOptions = {}) {
@@ -77,8 +79,18 @@ export default class CalendarDriver implements Driver {
     this.#routeService.start();
     // A route change rebuilds the grid: re-check every chip.
     this.#routeService.subscribe(() => this.#eventRegistry?.reconcileAll());
-    this.#eventRegistry = new EventRegistry(document, this.selectors);
+    this.#reconciler = new InjectionReconciler({
+      document,
+      appId: this.#appId,
+      getDriverForElement: (el) => this.#eventRegistry?.getDriverForElement(el),
+    });
+    this.#eventRegistry = new EventRegistry(
+      document,
+      this.selectors,
+      this.#reconciler,
+    );
     this.#eventRegistry.start();
+    this.#reconciler.start();
   }
 
   getAppId(): string {
@@ -116,6 +128,7 @@ export default class CalendarDriver implements Driver {
 
   destroy(): void {
     this.#destroyed = true;
+    this.#reconciler?.stop();
     this.#eventRegistry?.stop();
     this.#routeService?.stop();
     this.#stopper.destroy();

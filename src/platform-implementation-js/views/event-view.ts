@@ -1,5 +1,7 @@
 import SafeEventEmitter from '../lib/safe-event-emitter';
 import type {
+  BadgeDescriptor,
+  BadgeHandle,
   EventRef,
   EventSegment,
   EventViewDriver,
@@ -12,6 +14,11 @@ import type {
  * When Calendar replaces a chip (for example after dragging it to another day)
  * the old view is destroyed and a new one is created, so handlers run again.
  */
+export type EventViewBadgeDescriptor = Omit<BadgeDescriptor, 'onClick'> & {
+  /** Called with this view when the badge is clicked. */
+  onClick?: (eventView: EventView) => void;
+};
+
 export default class EventView extends SafeEventEmitter {
   destroyed = false;
   readonly #driver: EventViewDriver;
@@ -42,5 +49,22 @@ export default class EventView extends SafeEventEmitter {
   /** Recomputed on every call: dragging can turn a timed event into an all-day one. */
   isAllDay(): boolean {
     return this.#driver.isAllDay();
+  }
+
+  /**
+   * Show a small badge on this chip. Calendar re-renders chips and strips
+   * foreign nodes, so the SDK re-inserts the badge whenever it disappears; it
+   * is removed when this view is destroyed. Use the returned handle to change
+   * or remove it.
+   */
+  addBadge(descriptor: EventViewBadgeDescriptor): BadgeHandle {
+    if (this.destroyed) {
+      throw new Error('addBadge: this EventView has been destroyed');
+    }
+    const { onClick, ...rest } = descriptor;
+    return this.#driver.addBadge({
+      ...rest,
+      ...(onClick && { onClick: () => onClick(this) }),
+    });
   }
 }

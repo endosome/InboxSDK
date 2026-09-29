@@ -10,12 +10,16 @@ import {
   tokenFor,
 } from '../testing-chip-fixtures';
 
+const noBadges = {
+  addBadge: () => ({ update: () => undefined, remove: () => undefined }),
+};
+
 function setup() {
   const { main, ghostLayer } = renderShell();
   const selectors = new SelectorRegistry<CalendarSelectorKey>(
     CALENDAR_SELECTORS,
   );
-  const registry = new EventRegistry(document, selectors);
+  const registry = new EventRegistry(document, selectors, noBadges);
   const created: CalendarEventViewDriver[] = [];
   const destroyed: CalendarEventViewDriver[] = [];
   registry.subscribe((d) => {

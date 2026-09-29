@@ -3,9 +3,21 @@ import type SelectorRegistry from '../../../lib/dom/selectorRegistry';
 import { reportError, reportEvent } from '../../../lib/reporter';
 import type { CalendarSelectorKey } from '../selectors';
 import { eventRefFromChip, eventRefKey } from '../identity';
+import type {
+  BadgeDescriptor,
+  BadgeHandle,
+} from '../../../driver-interfaces/event-view-driver';
 import CalendarEventViewDriver, {
-  type SegmentSource,
+  type ViewHost,
 } from '../views/calendar-event-view-driver';
+
+/** The part of badge injection the registry needs (implemented by the reconciler). */
+export interface BadgeHost {
+  addBadge(
+    driver: CalendarEventViewDriver,
+    descriptor: BadgeDescriptor,
+  ): BadgeHandle;
+}
 
 type Subscriber = (driver: CalendarEventViewDriver) => void;
 
@@ -30,7 +42,8 @@ const MAX_REPORTED_TOKENS = 20;
  * element in one render keeps its view, while a replaced element (cross-day
  * drag) destroys the old view and creates a new one (V1 behaviour, plan §7.3).
  */
-export default class EventRegistry implements SegmentSource {
+export default class EventRegistry implements ViewHost {
+  readonly #badges: BadgeHost;
   readonly #doc: Document;
   readonly #selectors: SelectorRegistry<CalendarSelectorKey>;
   readonly #entries = new Map<Element, CalendarEventViewDriver>();
@@ -39,7 +52,12 @@ export default class EventRegistry implements SegmentSource {
   #observer: MutationObserver | null = null;
   #stopped = false;
 
-  constructor(doc: Document, selectors: SelectorRegistry<CalendarSelectorKey>) {
+  constructor(
+    doc: Document,
+    selectors: SelectorRegistry<CalendarSelectorKey>,
+    badges: BadgeHost,
+  ) {
+    this.#badges = badges;
     this.#doc = doc;
     this.#selectors = selectors;
   }
@@ -86,6 +104,18 @@ export default class EventRegistry implements SegmentSource {
     this.#subscribers.clear();
     for (const driver of this.#entries.values()) driver.destroy();
     this.#entries.clear();
+  }
+
+  addBadge(
+    driver: CalendarEventViewDriver,
+    descriptor: BadgeDescriptor,
+  ): BadgeHandle {
+    return this.#badges.addBadge(driver, descriptor);
+  }
+
+  /** The view of a chip element, if that chip currently has one. */
+  getDriverForElement(el: Element): CalendarEventViewDriver | undefined {
+    return this.#entries.get(el);
   }
 
   getSegment(driver: CalendarEventViewDriver): EventSegment {

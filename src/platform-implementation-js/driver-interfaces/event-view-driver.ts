@@ -21,6 +21,23 @@ export type EventRef = {
 
 export type EventSegment = { index: number; count: number; isPrimary: boolean };
 
+export type BadgeDescriptor = {
+  /** Short text shown in the badge. At least one of `text` and `iconUrl` is required. */
+  text?: string;
+  /** Icon URL: a `data:` URL, a `chrome-extension://` web-accessible resource or any https image. */
+  iconUrl?: string;
+  /** Tooltip. */
+  title?: string;
+  /** Called when the badge is clicked (the click does not open Calendar's popover). */
+  onClick?: () => void;
+};
+
+/** Returned by `addBadge`. */
+export type BadgeHandle = {
+  update(changes: Partial<BadgeDescriptor>): void;
+  remove(): void;
+};
+
 /** What the public `EventView` needs from a site driver. */
 export interface EventViewDriver {
   getEventRef(): EventRef;
@@ -28,6 +45,7 @@ export interface EventViewDriver {
   getSegment(): EventSegment;
   /** Derived per call: the same event can flip between all-day and timed. */
   isAllDay(): boolean;
+  addBadge(descriptor: BadgeDescriptor): BadgeHandle;
   /** Ends when the chip goes away or stops being this event. */
   getStopper(): Stopper;
 }

@@ -83,6 +83,21 @@ export interface EventRef {
   confidence: 'exact' | 'derived';
 }
 
+export interface BadgeDescriptor {
+  /** Short text. At least one of `text` and `iconUrl` is required. */
+  text?: string;
+  /** `data:` URL, `chrome-extension://` web-accessible resource or https image. */
+  iconUrl?: string;
+  title?: string;
+  /** Called when the badge is clicked; the click does not open Calendar's popover. */
+  onClick?: (eventView: EventView) => void;
+}
+
+export interface BadgeHandle {
+  update(changes: Partial<BadgeDescriptor>): void;
+  remove(): void;
+}
+
 /** One rendered chip of a calendar item. */
 export interface EventView {
   readonly destroyed: boolean;
@@ -92,6 +107,11 @@ export interface EventView {
   getSegment(): { index: number; count: number; isPrimary: boolean };
   /** Recomputed on every call (dragging can flip timed/all-day). */
   isAllDay(): boolean;
+  /**
+   * Show a badge on this chip. Calendar strips foreign nodes on re-render, so the SDK
+   * re-inserts it whenever it disappears; it is removed with the view.
+   */
+  addBadge(descriptor: BadgeDescriptor): BadgeHandle;
   on(event: 'destroy', listener: () => void): this;
 }
 

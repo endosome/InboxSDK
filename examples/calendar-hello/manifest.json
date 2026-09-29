@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "CalendarSDK hello world",
+  "version": "0.0.1",
+  "description": "Loads the CalendarSDK on Google Calendar and logs the result.",
+  "content_scripts": [
+    {
+      "matches": ["https://calendar.google.com/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}

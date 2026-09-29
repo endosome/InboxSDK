@@ -8,7 +8,7 @@ export interface Reporter {
   event(name: string, details?: unknown): void;
 }
 
-/** What extension code gets on `sdk.Logger` (shape kept from InboxSDK). */
+/** What extension code gets on `sdk.Logger` (same shape as before the fork). */
 export interface AppLogger {
   error(err: Error | unknown, details?: any): void;
   event(name: string, details?: any): void;

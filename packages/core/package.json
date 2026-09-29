@@ -1,8 +1,8 @@
 {
   "name": "@inboxsdk/core",
   "version": "2.2.27",
-  "description": "Library for building browser extensions for Gmail",
-  "main": "inboxsdk.js",
+  "description": "Library for building browser extensions for Google Calendar",
+  "main": "calendarsdk.js",
   "author": "Streak",
   "license": "(MIT OR Apache-2.0)",
   "repository": {
@@ -14,16 +14,11 @@
   },
   "homepage": "https://www.inboxsdk.com/",
   "sideEffects": true,
-  "types": "src/inboxsdk.d.ts",
+  "types": "src/calendarsdk.d.ts",
   "files": [
-    "inboxsdk.js",
-    "inboxsdk.js.map",
-    "inboxsdk.d.ts",
-    "background.js",
-    "background.d.ts",
-    "pageWorld.js",
-    "pageWorld.js.map",
-    "pageWorld.d.ts",
+    "calendarsdk.js",
+    "calendarsdk.js.map",
+    "calendarsdk.d.ts",
     "src"
   ],
   "dependencies": {

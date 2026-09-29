@@ -6,8 +6,6 @@ type BuildConfig = Parameters<typeof esbuild.build>[0];
 
 const TIMING_LABEL = 'building ./examples took';
 
-const buildSdkFiles = ['@inboxsdk/core/pageWorld', '@inboxsdk/core/background'];
-
 // for each folder in examples, build and output the example with esbuild
 export async function buildExamples({
   contentScriptFps,
@@ -20,25 +18,14 @@ export async function buildExamples({
 }) {
   console.time(TIMING_LABEL);
 
-  const sdkEntryPoints = buildSdkFiles
-    .flatMap((sdkFile) =>
-      contentScriptFps.flatMap((c) => [
-        {
-          out: path.join(path.dirname(c), path.basename(sdkFile)),
-          in: sdkFile,
-        },
-      ]),
-    )
-    .concat(
-      contentScriptFps.map((c) => ({
-        out: path.join(
-          path.dirname(c),
-          'dist',
-          path.basename(c).replace(/\.[jt]s$/, ''),
-        ),
-        in: c,
-      })),
-    );
+  const sdkEntryPoints = contentScriptFps.map((c) => ({
+    out: path.join(
+      path.dirname(c),
+      'dist',
+      path.basename(c).replace(/\.[jt]s$/, ''),
+    ),
+    in: c,
+  }));
 
   const config: BuildConfig = {
     define: {

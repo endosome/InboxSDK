@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "CalendarSDK goto example",
+  "version": "0.0.1",
+  "description": "Navigates with Router.goto when the page sets data-calsdk-goto on Google Calendar.",
+  "content_scripts": [
+    {
+      "matches": ["https://calendar.google.com/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}

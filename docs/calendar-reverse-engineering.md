@@ -922,3 +922,15 @@ Calendar's popover state — both happen without any SDK.
 - Month view with the fixtures shows 15 events, 1 task, 1 birthday; the task and
   birthday chips are ordinary `[data-eventchip]` elements with `ttb_`/`bday_`
   ids and get badges like events.
+
+### 1.22 Programmatic navigation [V: `extension-goto.mjs`]
+
+- `history.pushState({}, '', '/calendar/u/0/r/month/2026/10/15')` followed by
+  `dispatchEvent(new PopStateEvent('popstate', {state: {}}))` switches the view
+  in place (page state such as a `window` marker survives). Passing
+  `history.state` (Calendar's own object) instead of `{}` makes Calendar restore
+  the previous URL.
+- `navigation.navigate(url)` and clicking a synthesized `<a href>` both do a
+  full page load.
+- Calendar writes dates unpadded (`/2026/9/30`) and may drop them from the URL
+  of the view it lands on (`/r/week`).

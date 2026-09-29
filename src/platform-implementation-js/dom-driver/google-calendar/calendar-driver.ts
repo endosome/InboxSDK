@@ -14,6 +14,7 @@ import {
   type CalendarSelectorKey,
   type SelectorOverrides,
 } from './selectors';
+import type { GotoTarget } from './route-url';
 import RouteService from './services/route-service';
 import EventRegistry from './services/event-registry';
 import InjectionReconciler from './services/injection-reconciler';
@@ -143,6 +144,16 @@ export default class CalendarDriver implements Driver {
   onRouteViewDriver(cb: (driver: RouteViewDriver) => void): () => void {
     if (!this.#routeService) throw new Error('CalendarDriver is not ready');
     return this.#routeService.subscribe(cb);
+  }
+
+  goto(target: GotoTarget): Promise<void> {
+    if (!this.#routeService)
+      return Promise.reject(new Error('CalendarDriver is not ready'));
+    try {
+      return this.#routeService.goto(target);
+    } catch (err) {
+      return Promise.reject(err);
+    }
   }
 
   getEventViewDrivers(): EventViewDriver[] {

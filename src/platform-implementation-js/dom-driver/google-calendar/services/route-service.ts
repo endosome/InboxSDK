@@ -5,6 +5,7 @@ import {
   type RouteInput,
 } from '../route-classifier';
 import CalendarRouteViewDriver from '../views/calendar-route-view-driver';
+import { buildRouteUrl, type GotoTarget } from '../route-url';
 import { reportError } from '../../../lib/reporter';
 
 type Listener = (type: string, fn: () => void) => void;
@@ -22,6 +23,8 @@ export type RouteServiceEnv = {
     addEventListener: Listener;
     removeEventListener: Listener;
   };
+  /** Pushes a URL and tells Calendar's router (default: `history.pushState` + a `popstate` event). */
+  navigate?: (url: string) => void;
   /** URL and body attributes disagreed for longer than `settleMs`. */
   onDisagreement?: (input: RouteInput, descriptor: RouteDescriptor) => void;
   /** How long the URL may lead the DOM before the DOM is trusted anyway. */
@@ -29,6 +32,13 @@ export type RouteServiceEnv = {
 };
 
 const RECHECK_MS = 50;
+
+function defaultNavigate(url: string) {
+  // A fresh state object: re-using Calendar's own state makes its router treat this as
+  // "back to that entry" and restore the previous URL (verified live).
+  history.pushState({}, '', url);
+  window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+}
 
 /**
  * Turns Calendar's navigation into a sequence of route objects. A new route is
@@ -103,6 +113,56 @@ export default class RouteService {
   subscribe(cb: (d: CalendarRouteViewDriver) => void): () => void {
     this.#subscribers.add(cb);
     return () => this.#subscribers.delete(cb);
+  }
+
+  /**
+   * Navigate inside Calendar (no reload) and resolve once the route has
+   * changed to the requested kind. Verified live: `history.pushState` plus a
+   * `popstate` event makes Calendar switch view without a page load, whereas
+   * `navigation.navigate()` and link clicks reload the page.
+   */
+  goto(target: GotoTarget, timeoutMs = 5000): Promise<void> {
+    if (this.#stopped)
+      return Promise.reject(new Error('Router.goto: the SDK was destroyed'));
+    const { url, expected } = buildRouteUrl(
+      target,
+      this.#env.location.pathname,
+    );
+    const matches = (d: CalendarRouteViewDriver) => {
+      const desc = d.getDescriptor();
+      return (
+        desc.type === expected.type &&
+        desc.eventRawId === expected.eventRawId &&
+        desc.searchQuery === expected.searchQuery
+      );
+    };
+    const [path, query = ''] = url.split('?');
+    const already =
+      this.#env.location.pathname === path &&
+      this.#env.location.search === (query ? `?${query}` : '') &&
+      matches(this.#current!);
+    if (already) return Promise.resolve();
+    return new Promise<void>((resolve, reject) => {
+      const done = (err?: Error) => {
+        clearTimeout(timer);
+        unsubscribe();
+        if (err) reject(err);
+        else resolve();
+      };
+      const unsubscribe = this.subscribe((d) => {
+        if (matches(d)) done();
+      });
+      const timer = setTimeout(
+        () =>
+          done(new Error(`Router.goto: Calendar did not navigate to ${url}`)),
+        timeoutMs,
+      );
+      try {
+        (this.#env.navigate ?? defaultNavigate)(url);
+      } catch (err) {
+        done(err as Error);
+      }
+    });
   }
 
   stop(): void {

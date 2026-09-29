@@ -153,7 +153,22 @@ export interface Router {
   getCurrentRouteView(): RouteView;
   /** Called for the current route and every later one; returns an unregister function. */
   registerRouteViewHandler(handler: (routeView: RouteView) => void): () => void;
+  /**
+   * Navigate inside Calendar without reloading the page. Resolves when the route
+   * has changed; rejects on a bad target or if Calendar does not navigate in 5 s.
+   */
+  goto(target: GotoTarget): Promise<void>;
 }
+
+export type GotoTarget =
+  | {
+      type: 'DAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'AGENDA' | 'CUSTOM_DAYS';
+      /** `YYYY-MM-DD`; omit for today. */
+      date?: string;
+    }
+  | { type: 'SEARCH'; query: string }
+  /** Opens the editor of this event (kind `event` only). */
+  | EventRef;
 
 export interface User {
   getEmailAddress(): string;

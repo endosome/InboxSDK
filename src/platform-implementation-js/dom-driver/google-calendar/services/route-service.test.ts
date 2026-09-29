@@ -222,3 +222,106 @@ test('editor A → editor B is a new route with the new event ref', async () => 
   expect(seen).toEqual(['bbb222']);
   expect(first.getStopper().stopped).toBe(true);
 });
+
+describe('goto', () => {
+  function withNavigate(path: string, viewKey: string) {
+    const ctx = setup(path, viewKey);
+    const calls: string[] = [];
+    const svc = new RouteService({
+      document,
+      location: ctx.location,
+      window: ctx.win,
+      navigation: ctx.navigation,
+      settleMs: 300,
+      navigate: (url) => {
+        calls.push(url);
+        // Calendar: URL first, DOM a moment later
+        const [p, q = ''] = url.split('?');
+        ctx.location.pathname = p;
+        (ctx.location as any).search = q ? `?${q}` : '';
+        ctx.navigation.fire('navigate');
+        setTimeout(() => {
+          const seg = p.split('/r/')[1]?.split('/')[0] ?? '';
+          const key = (
+            {
+              month: 'MONTH',
+              week: 'WEEK',
+              day: 'DAY',
+              eventedit: 'EVENTEDIT',
+              search: 'SEARCH',
+            } as any
+          )[seg];
+          if (key) document.body.setAttribute('data-viewkey', key);
+        }, 100);
+      },
+    });
+    return { ...ctx, service: svc, calls };
+  }
+
+  test('resolves once the route has changed to the requested kind', async () => {
+    const ctx = withNavigate('/calendar/u/0/r/week/2026/9/30', 'WEEK');
+    ctx.service.start();
+    let resolved = false;
+    const p = ctx.service
+      .goto({ type: 'MONTH', date: '2026-10-15' })
+      .then(() => (resolved = true));
+    expect(ctx.calls).toEqual(['/calendar/u/0/r/month/2026/10/15']);
+    await jest.advanceTimersByTimeAsync(50);
+    expect(resolved).toBe(false); // URL moved, DOM not yet
+    await jest.advanceTimersByTimeAsync(200);
+    await p;
+    expect(ctx.service.getCurrent().getType()).toBe(RouteType.MONTH);
+    ctx.service.stop();
+  });
+
+  test('already on that exact route: resolves without navigating', async () => {
+    const ctx = withNavigate('/calendar/u/0/r/month/2026/10/15', 'MONTH');
+    ctx.service.start();
+    await ctx.service.goto({ type: 'MONTH', date: '2026-10-15' });
+    expect(ctx.calls).toEqual([]);
+    ctx.service.stop();
+  });
+
+  test('editor by EventRef resolves with the same token', async () => {
+    const tok = btoa('abc owner@m').replace(/=+$/, '');
+    const ctx = withNavigate('/calendar/u/0/r/week/2026/9/30', 'WEEK');
+    ctx.service.start();
+    const p = ctx.service.goto({
+      eventId: 'abc',
+      calendarId: null,
+      calendarIdHint: 'owner@m',
+      kind: 'event',
+      rawId: tok,
+      confidence: 'exact',
+    });
+    await jest.advanceTimersByTimeAsync(400);
+    await p;
+    expect(ctx.service.getCurrent().getEventRef()?.eventId).toBe('abc');
+    ctx.service.stop();
+  });
+
+  test('rejects when Calendar never navigates, on bad targets, and after stop', async () => {
+    const ctx = withNavigate('/calendar/u/0/r/week/2026/9/30', 'WEEK');
+    ctx.service.start();
+    const ignoring = new RouteService({
+      document,
+      location: ctx.location,
+      window: ctx.win,
+      navigation: ctx.navigation,
+      navigate: () => undefined,
+    });
+    ignoring.start();
+    const p = ignoring.goto({ type: 'DAY' }, 1000);
+    const assertion = expect(p).rejects.toThrow('did not navigate');
+    await jest.advanceTimersByTimeAsync(1100);
+    await assertion;
+    expect(() => ctx.service.goto({ type: 'DAY', date: 'nope' })).toThrow(
+      'invalid date',
+    );
+    ctx.service.stop();
+    await expect(ctx.service.goto({ type: 'DAY' })).rejects.toThrow(
+      'destroyed',
+    );
+    ignoring.stop();
+  });
+});

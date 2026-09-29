@@ -2,6 +2,7 @@ import HandlerRegistry from '../lib/handler-registry';
 import type Membrane from '../lib/Membrane';
 import type { Driver } from '../driver-interfaces/driver';
 import { RouteType } from '../constants/router';
+import type { GotoTarget } from '../dom-driver/google-calendar/route-url';
 import type RouteView from '../views/route-view/route-view';
 
 export default class Router {
@@ -28,6 +29,17 @@ export default class Router {
 
   getCurrentRouteView(): RouteView {
     return this.#membrane.get(this.#driver.getCurrentRouteViewDriver());
+  }
+
+  /**
+   * Navigate inside Calendar without reloading the page. Targets: a view
+   * (`{ type: 'WEEK', date: '2026-09-30' }`, date optional = today), a search
+   * (`{ type: 'SEARCH', query }`) or an `EventRef` of an event (opens its
+   * editor). Resolves when the route has changed; rejects on a bad target or
+   * if Calendar does not navigate within 5 s.
+   */
+  goto(target: GotoTarget): Promise<void> {
+    return this.#driver.goto(target);
   }
 
   /**

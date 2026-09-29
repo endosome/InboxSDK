@@ -168,7 +168,8 @@ interface RouteView extends Emitter<{ destroy: void }> {
   getEventRef(): EventRef | null;     // EVENT_EDIT; added with identity.ts in Phase 3
 }
 interface Router { getCurrentRouteView(): RouteView; registerRouteViewHandler(h): () => void;
-                   goto(target: { type: RouteType; date?: string } | EventRef): void }   // goto = pushState + popstate LATER
+                   goto(target: { type: 'DAY'|'WEEK'|'MONTH'|'YEAR'|'AGENDA'|'CUSTOM_DAYS'; date?: string }
+                            | { type: 'SEARCH'; query: string } | EventRef): Promise<void> }   // DONE: pushState + popstate, no reload
 // ---- Toolbar / User / Compat
 interface Toolbar { addButton(d: { title: string; iconUrl: string; onClick(): void }): ButtonHandle }  // V1 NICE
 interface User { getEmailAddress(): string; getLanguage(): string; getTimeZone(): string | null }
@@ -717,6 +718,15 @@ instance's `EventRef` is identical (UTC-based) — Calendar renders in the
 _account's_ zone, so grid labels do not move with the browser zone;
 `User.getTimeZone()` is the load-time account zone by design. _Still not
 covered:_ hundreds of _real_ events, Workspace, other input methods.
+
+**`Router.goto` (done).** `history.pushState({}, …)` + a `popstate` event
+switches view **without a reload**, verified live for all view types, search and
+the editor (`extension-goto.mjs`, 15 checks). Two traps found: re-using
+Calendar's own `history.state` makes its router restore the old URL (use a fresh
+`{}`), and `navigation.navigate()` / link clicks reload the page. The promise
+resolves when the route of the requested kind is emitted (rejects after 5 s),
+bad targets (impossible date, SETTINGS, task/birthday refs — tasks do not use
+the editor) reject without navigating.
 
 ## 13. Risks
 

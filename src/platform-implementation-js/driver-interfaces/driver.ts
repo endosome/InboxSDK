@@ -1,6 +1,7 @@
 import type { Stopper } from 'kefir-stopper';
 import type { RouteViewDriver } from './route-view-driver';
 import type { EventViewDriver } from './event-view-driver';
+import type { GotoTarget } from '../dom-driver/google-calendar/route-url';
 import type { EventPopoverViewDriver } from './event-popover-view-driver';
 import type { CompatIssue, CompatReport } from '../compat/types';
 import type { EventEditorViewDriver } from './event-editor-view-driver';
@@ -34,6 +35,8 @@ export interface Driver {
    * function. The previous route's stopper fires before the callback runs.
    */
   onRouteViewDriver(cb: (driver: RouteViewDriver) => void): () => void;
+  /** Navigate inside Calendar; resolves when the route has changed, rejects on timeout or a bad target. */
+  goto(target: GotoTarget): Promise<void>;
   /** Every eligible chip currently on the page. */
   getEventViewDrivers(): EventViewDriver[];
   /** Called for each chip that becomes an event view later. Returns an unsubscribe function. */

@@ -468,26 +468,31 @@ green). _Tests:_ every claim tagged [V] names its script. _Risks:_ only 2
 consumer accounts, `en`/`de`. _Exit:_ real-content-script smoke (first task of
 Phase 2), Workspace pass, ≥300-chip scale test — none of them blocks Phase 1.
 
-**Phase 1 — Genericize (no Calendar code).** _Goal:_ infrastructure free of
-Gmail and Streak. _Code:_ `driver-interfaces/driver.ts` (real interface, drop
-`= GmailDriver`); `lib/dom/selectorRegistry.ts` → `SelectorRegistry<K>`;
-`lib/inject-script.ts` (readiness signal); `lib/logger.ts` → `Reporter`; remove
-`mail.google.com` gates (`inboxsdk-js/inboxsdk.ts`,
-`platform-implementation-js/main.ts`, `platform-implementation.ts`,
-`injected-js/main.ts`); delete `dom-driver/inbox`, Gmail
-views/widgets/namespaces, `injected-js/gmail`, REMOTE build variants,
-`style/gmail.css`; ESLint rule banning
-`innerHTML`/`insertAdjacentHTML`/`outerHTML =` (Trusted Types); rebrand (§16).
-Recommendation: extract the six generic modules first, then **delete Gmail
-wholesale in one commit** (nothing in this fork needs Gmail to keep working).
-_Experiments:_ none. _Deliverables:_ a repo that builds an empty
-`CalendarSDK.load()` bundle. _Tests:_ the generic subset of the 420 existing
-Jest tests stays green (baseline 58 suites / 420 tests; `yarn typecheck`
-baseline has 8 pre-existing `TS7006` errors in `examples/app-menu/content.ts`;
-`AGENTS.md` still says 384 tests — stale). _Risks:_ churn across 36 + 41 files
-importing Gmail types; `auto-html`/React helpers with hidden `innerHTML`.
-_Exit:_ `grep -r "dom-driver/gmail" src` empty, lint + typecheck + tests green,
-no reference to `inboxsdk.com`/`pubsub` remains.
+**Phase 1 — Genericize (no Calendar code). DONE on branch
+`calendar-sdk-phase1`.** _Goal:_ infrastructure free of Gmail and Streak.
+_Done:_ keep-set computed with an import-closure script (only `lib/logger.ts`
+and `selectors.ts` tied the kept modules to Gmail/Streak); `lib/reporter.ts`
+(console default, never sends data) and `SelectorRegistry<K>` cut those seams;
+Gmail/Inbox drivers, views, widgets, namespaces, page-world scripts, remote
+loading, Gmail CSS/fixtures/examples, `lib/logger.ts`, `common/log-error.ts`,
+`isStreakAppId`, telemetry and `mail.google.com` gates deleted; real `Driver`
+interface, `CalendarDriver` skeleton, `CALENDAR_SELECTORS` (live-verified keys,
+validity-tested), `PlatformImplementation` shell with API-version gating that
+**throws** on any origin but `https://calendar.google.com`,
+`CalendarSDK.load(1, { appId })`, handwritten public types; single
+`calendarsdk.js` bundle (no pageWorld/background/remote),
+`examples/calendar-hello`, trimmed CI; ESLint ban on HTML-string sinks (Trusted
+Types); rebrand to `@calendarsdk/*` (placeholder scope, plan §17) with
+attribution kept. _Exit met:_ `yarn gulp` (bundle + example), `yarn typecheck` 0
+errors, `yarn test` 187 tests / 22 suites (420 → 187: 238 tests left with the
+deleted Gmail code, 5 added), `yarn lint`, `yarn lint:stylelint`
+(`--allow-empty-input`), grep gate for
+`GmailDriver|dom-driver/gmail|mail.google.com|inboxsdk.com|pubsub|mailfoogae| isStreakAppId|data-inboxsdk-`
+empty; the built bundle was also loaded in jsdom (resolves on calendar origin,
+rejects elsewhere). _Deliberately deferred:_ pruning Gmail-only dependencies
+(react, page-parser-tree, order-manager, …) and `yarn.lock`; the
+`platform-implementation-js` directory name kept; `xhr-proxy-factory` kept
+dormant; the old README contribution guidelines were replaced, not ported.
 
 **Phase 2 — Calendar bootstrap.** _Goal:_ SDK loads on Calendar; route, root and
 user info work from a real content script. _Code:_ loader (`CalendarSDK.load`),

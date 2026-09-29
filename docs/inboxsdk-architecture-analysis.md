@@ -166,3 +166,9 @@ in §2 (rows 17, 24, `generic-button-view`, React helpers) each need a
 Trusted-Types-safe rewrite or a single sanctioned policy helper**, and an ESLint
 ban on direct `innerHTML` should land in Phase 1. Gmail never enforced Trusted
 Types, so nothing in the existing test-suite covers this.
+
+## 8. Outcome (Phase 1)
+
+The KEEP/DELETE verdicts above were executed on branch `calendar-sdk-phase1`;
+file paths cited in this document refer to the tree at commit `94d8cee7` and no
+longer exist unless they are in the kept set (see plan §12, Phase 1).

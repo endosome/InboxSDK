@@ -64,6 +64,32 @@ module.exports = {
       },
     },
     {
+      // SDK code only (build tooling under src/build legitimately uses .write()).
+      files: ['src/**'],
+      excludedFiles: ['*.test.*', '*.d.ts', 'src/build/**'],
+      rules: {
+        // Google Calendar enforces `require-trusted-types-for 'script'`, so HTML
+        // strings cannot be assigned to DOM sinks (docs/calendar-reverse-engineering.md
+        // §1.18). Build DOM with createElement/textContent/setAttribute, or go
+        // through one Trusted Types policy helper (which may disable this rule).
+        'no-restricted-syntax': [
+          'error',
+          {
+            selector:
+              "AssignmentExpression[left.type='MemberExpression'][left.property.name=/^(innerHTML|outerHTML)$/]",
+            message:
+              'Trusted Types: do not assign HTML strings; build DOM with createElement/textContent or use the Trusted Types helper.',
+          },
+          {
+            selector:
+              'CallExpression[callee.property.name=/^(insertAdjacentHTML|createContextualFragment|setHTMLUnsafe|write|writeln)$/]',
+            message:
+              'Trusted Types: HTML-string sinks are blocked on Google Calendar; build DOM with createElement/textContent or use the Trusted Types helper.',
+          },
+        ],
+      },
+    },
+    {
       files: ['__tests__/**', '**/*.test.*', 'test/**'],
       env: {
         jest: true,

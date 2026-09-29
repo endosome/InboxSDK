@@ -6,7 +6,7 @@ import stdio from 'stdio';
 import extReloader from './live/extReloader';
 import fg from 'fast-glob';
 import exec from './src/build/exec';
-import { buildExamples } from '@inboxsdk/examples/build';
+import { buildExamples } from '@calendarsdk/examples/build';
 
 const sdkFilename = 'calendarsdk';
 

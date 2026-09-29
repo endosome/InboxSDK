@@ -1,4 +1,6 @@
-# InboxSDK
+# @calendarsdk/core
 
-- Main site: https://www.inboxsdk.com/
-- Documentation: https://inboxsdk.github.io/inboxsdk-docs/
+Library for building browser extensions that integrate with Google Calendar.
+
+Status: early development (bootstrap only). See the repository `docs/` for the
+plan.

@@ -1,5 +1,4 @@
 {
-  "author": "Streak",
   "dependencies": {
     "@babel/cli": "^7.23.0",
     "@babel/core": "^7.23.0",
@@ -9,7 +8,7 @@
     "@babel/preset-react": "^7.22.15",
     "@babel/preset-typescript": "^7.23.0",
     "@babel/register": "^7.22.15",
-    "@inboxsdk/examples": "workspace:*",
+    "@calendarsdk/examples": "workspace:*",
     "@macil/simple-base-converter": "^1.0.0",
     "@types/asap": "^2.0.0",
     "@types/classnames": "^2.2.8",
@@ -93,16 +92,14 @@
     "ud": "^3.3.1",
     "ud-kefir": "^2.0.1"
   },
-  "description": "Library for browser extensions to interact with Gmail.",
+  "description": "Library for browser extensions to integrate with Google Calendar.",
   "license": "(MIT OR Apache-2.0)",
-  "main": "src/inboxsdk-js/inboxsdk.js",
-  "name": "inboxsdk",
+  "name": "calendarsdk",
   "private": true,
   "scripts": {
     "typecheck": "tsc",
     "typedefs": "tsc -p tsconfig.declarations.json",
     "prepare": "husky install",
-    "publish-npm": "gulp clean && gulp --production --noExamples && yarn workspace @inboxsdk/core npm publish && git push --follow-tags",
     "lint": "yarn run lint:eslint && yarn run prettier:check",
     "lint:fix": "yarn run lint:eslint --fix && yarn run prettier:fix",
     "lint:eslint": "eslint . --report-unused-disable-directives --max-warnings 0",

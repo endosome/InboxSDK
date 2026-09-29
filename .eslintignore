@@ -2,7 +2,6 @@
 /dist
 /coverage
 /examples
-#/examples/*/inboxsdk.js*
 /chromeTestOutput
 /packages/core/calendarsdk.js*
 /packages/core/calendarsdk.min.js

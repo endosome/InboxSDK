@@ -4,63 +4,60 @@
 
 ### Product overview
 
-InboxSDK is a Yarn 4 monorepo for building Gmail browser extensions. There is no
-standalone web app or backend — development centers on building the
-`@inboxsdk/core` SDK and testing via example Chrome MV3 extensions under
-`examples/`.
+CalendarSDK is a Yarn 4 monorepo for building Google Calendar browser
+extensions. There is no standalone web app or backend — development centers on
+building the `@calendarsdk/core` SDK (`packages/core`) and testing via example
+Chrome MV3 extensions under `examples/`. It is derived from InboxSDK (Gmail);
+the Gmail integration was deleted in Phase 1. Read `docs/calendar-sdk-plan.md`
+before changing architecture and `docs/calendar-reverse-engineering.md` §0.1 for
+verified Calendar behaviour.
 
-### Services
+### Commands
 
-| Service             | Command               | Notes                                                                          |
-| ------------------- | --------------------- | ------------------------------------------------------------------------------ |
-| Dev builder (watch) | `yarn start`          | Runs `gulp default -w --reloader`; rebuilds SDK + all examples on file changes |
-| One-shot build      | `yarn gulp`           | Builds `packages/core/` bundles and all example extensions                     |
-| Unit tests          | `yarn test`           | Jest in jsdom; 384 tests                                                       |
-| Typecheck           | `yarn typecheck`      | `tsc`                                                                          |
-| Lint                | `yarn lint`           | ESLint + Prettier                                                              |
-| CSS lint            | `yarn lint:stylelint` | Stylelint                                                                      |
+| Purpose    | Command               | Notes                                                                       |
+| ---------- | --------------------- | --------------------------------------------------------------------------- |
+| Build      | `yarn gulp`           | Builds `packages/core/calendarsdk.js`, generates types, builds `examples/*` |
+| Watch      | `yarn start`          | `gulp default -w --reloader`                                                |
+| Unit tests | `yarn test`           | Jest in jsdom                                                               |
+| Typecheck  | `yarn typecheck`      | `tsc`; run `yarn gulp` first (examples import `@calendarsdk/core` types)    |
+| Lint       | `yarn lint`           | ESLint + Prettier                                                           |
+| CSS lint   | `yarn lint:stylelint` | Stylelint (currently no CSS files)                                          |
 
 ### Verification after changes
 
-Whenever you make code or style changes, remember to run the relevant checks
-before handing off: `yarn test`, `yarn lint` (ESLint + Prettier), and
-`yarn lint:stylelint` for CSS changes.
+Whenever you make code or style changes, run the relevant checks before handing
+off: `yarn test`, `yarn lint`, `yarn typecheck` (after `yarn gulp`), and
+`yarn lint:stylelint` for CSS changes. After `yarn gulp`, verify
+`packages/core/calendarsdk.js` and `examples/*/dist/content.js` exist.
+
+### Rules that come from Google Calendar
+
+- **No HTML-string DOM sinks** in SDK code (`innerHTML`, `outerHTML`,
+  `insertAdjacentHTML`, `createContextualFragment`, `document.write`): Calendar
+  enforces Trusted Types and they throw. ESLint enforces this; build DOM with
+  `createElement`/`textContent`/`setAttribute` or one Trusted Types helper.
+- Never send data anywhere from core; diagnostics go through `lib/reporter.ts`.
+- Do not rely on `<html data-prefetch-view-key>` for routing (load-time only);
+  see the plan §8.
 
 ### Node version
 
 `.nvmrc` selects the latest Node LTS release. CI (CircleCI) uses **Node
 24.20.0**.
 
-### Manual E2E testing (requires local Chrome + Gmail)
+### Manual E2E testing (requires local Chrome + a Google account)
 
-1. Run `yarn start` to start the watch builder.
-2. Load an example extension (e.g. `examples/hello-world/` or
-   `examples/app-menu/`) as an unpacked extension in Chrome via
+1. Run `yarn start` (or `yarn gulp` once).
+2. Load `examples/calendar-hello/` as an unpacked extension via
    `chrome://extensions`.
-3. Open Gmail while logged in and refresh after SDK changes.
+3. Open https://calendar.google.com while signed in and check the console for
+   `CalendarSDK loaded`.
 
-The hello-world example adds a compose button that inserts "Hello World!" into
-the email body — a good smoke test for the full extension flow.
-
-Optional: install the
-[Chrome Extensions Reloader](https://chrome.google.com/webstore/detail/extensions-reloader/fimgfedafeadlieiabdeeaodndnlbhid)
-extension; `--reloader` auto-triggers it on rebuild (macOS Chrome paths only in
-`live/extReloader.ts`).
-
-### Remote-loading dev mode
-
-To mimic production CDN loading with a local server on port 4567:
-
-```bash
-yarn gulp --remote server -w --reloader
-```
-
-Chrome must be launched with `--allow-running-insecure-content` because Gmail
-(HTTPS) loads `http://localhost:4567/platform-implementation.js`.
+For automated live investigation see `tools/calendar-probe/README.md` (uses a
+human-signed-in Chrome over CDP; use a dedicated test account).
 
 ### Gotchas
 
 - Peer dependency warnings from Yarn on install are expected and non-blocking.
-- After `yarn gulp`, verify outputs: `packages/core/inboxsdk.js`,
-  `examples/*/dist/content.js`.
 - Browserslist "caniuse-lite is outdated" warnings during build are harmless.
+- The SDK throws on any origin other than `https://calendar.google.com`.

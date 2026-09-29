@@ -1517,6 +1517,34 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@calendarsdk/core@workspace:*, @calendarsdk/core@workspace:packages/core":
+  version: 0.0.0-use.local
+  resolution: "@calendarsdk/core@workspace:packages/core"
+  dependencies:
+    "@babel/runtime": "npm:^7.23.1"
+    "@types/kefir": "npm:^3.8.6"
+    "@types/node": "npm:^24.2.0"
+    "@types/transducers.js": "npm:^0.3.0"
+    asap: "npm:^2.0.3"
+    fast-deep-equal: "npm:^3.1.3"
+    kefir-cast: "npm:^3.3.0"
+    live-set: "npm:^1.0.0"
+    page-parser-tree: "npm:^0.4.0"
+    sha.js: "npm:^2.4.0"
+    tag-tree: "npm:^1.0.0"
+    typed-emitter: "npm:^2.1.0"
+  languageName: unknown
+  linkType: soft
+
+"@calendarsdk/examples@workspace:*, @calendarsdk/examples@workspace:examples":
+  version: 0.0.0-use.local
+  resolution: "@calendarsdk/examples@workspace:examples"
+  dependencies:
+    "@calendarsdk/core": "workspace:*"
+    esbuild: "npm:^0.20.2"
+  languageName: unknown
+  linkType: soft
+
 "@csstools/css-parser-algorithms@npm:^2.1.1":
   version: 2.1.1
   resolution: "@csstools/css-parser-algorithms@npm:2.1.1"
@@ -1786,34 +1814,6 @@ __metadata:
   checksum: 10/b48a8f87fcd5fdc4ac60a31a8bf710d19cc64556050575e6a35a4a48a8543cf8cde1598a65640ff2cdfbfd165b38f9db4fa3782bea7848eb585cc3db824002e6
   languageName: node
   linkType: hard
-
-"@inboxsdk/core@workspace:*, @inboxsdk/core@workspace:packages/core":
-  version: 0.0.0-use.local
-  resolution: "@inboxsdk/core@workspace:packages/core"
-  dependencies:
-    "@babel/runtime": "npm:^7.23.1"
-    "@types/kefir": "npm:^3.8.6"
-    "@types/node": "npm:^24.2.0"
-    "@types/transducers.js": "npm:^0.3.0"
-    asap: "npm:^2.0.3"
-    fast-deep-equal: "npm:^3.1.3"
-    kefir-cast: "npm:^3.3.0"
-    live-set: "npm:^1.0.0"
-    page-parser-tree: "npm:^0.4.0"
-    sha.js: "npm:^2.4.0"
-    tag-tree: "npm:^1.0.0"
-    typed-emitter: "npm:^2.1.0"
-  languageName: unknown
-  linkType: soft
-
-"@inboxsdk/examples@workspace:*, @inboxsdk/examples@workspace:examples":
-  version: 0.0.0-use.local
-  resolution: "@inboxsdk/examples@workspace:examples"
-  dependencies:
-    "@inboxsdk/core": "workspace:*"
-    esbuild: "npm:^0.20.2"
-  languageName: unknown
-  linkType: soft
 
 "@istanbuljs/load-nyc-config@npm:^1.0.0":
   version: 1.1.0
@@ -3980,6 +3980,111 @@ __metadata:
   checksum: 10/50dd11af5ce4aaa8a8bff190a870c940db80234cf087cd47dd177be8629c36ad8cd0716e62418ec1e135f2d01b28aafff62cd22d33412c3d18b2109dd9073711
   languageName: node
   linkType: hard
+
+"calendarsdk@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "calendarsdk@workspace:."
+  dependencies:
+    "@babel/cli": "npm:^7.23.0"
+    "@babel/core": "npm:^7.23.0"
+    "@babel/node": "npm:^7.22.19"
+    "@babel/plugin-transform-runtime": "npm:^7.22.15"
+    "@babel/preset-env": "npm:^7.22.20"
+    "@babel/preset-react": "npm:^7.22.15"
+    "@babel/preset-typescript": "npm:^7.23.0"
+    "@babel/register": "npm:^7.22.15"
+    "@calendarsdk/examples": "workspace:*"
+    "@macil/simple-base-converter": "npm:^1.0.0"
+    "@types/asap": "npm:^2.0.0"
+    "@types/classnames": "npm:^2.2.8"
+    "@types/gulp": "npm:^4.0.6"
+    "@types/http-server": "npm:^0.10.1"
+    "@types/jest": "npm:^29"
+    "@types/kefir": "npm:^3.8.7"
+    "@types/lazypipe": "npm:^0.0.31"
+    "@types/lodash": "npm:^4.14.161"
+    "@types/node": "npm:^24.2.0"
+    "@types/react": "npm:^17.0.11"
+    "@types/react-dom": "npm:^17.0.7"
+    "@types/sinon": "npm:^10.0.2"
+    "@types/sinon-test": "npm:^2.4.0"
+    "@types/transducers.js": "npm:^0.3.0"
+    "@types/vinyl-source-stream": "npm:^0.0.30"
+    "@typescript-eslint/eslint-plugin": "npm:^5.59.8"
+    "@typescript-eslint/parser": "npm:^5.59.8"
+    asap: "npm:^2.0.3"
+    auto-html: "npm:^1.0.4"
+    babel-jest: "npm:^29"
+    babel-loader: "npm:^9.1.2"
+    babel-plugin-transform-inline-environment-variables: "npm:^0.4.3"
+    bignumber.js: "npm:^9.0.1"
+    bimapcache: "npm:^2.0.0"
+    buffer: "npm:^6.0.3"
+    classnames: "npm:^2.2.5"
+    combokeys-capture: "npm:^2.4.2"
+    concat-stream: "npm:^2.0.0"
+    contain-by-screen: "npm:^1.0.3"
+    css-loader: "npm:^6.7.3"
+    eslint: "npm:^8.41.0"
+    eslint-plugin-deprecate: "npm:^0.7.0"
+    eslint-plugin-react: "npm:^7.32.2"
+    fast-deep-equal: "npm:^3.1.3"
+    fast-glob: "npm:^3.2.5"
+    gulp: "npm:^4.0.2"
+    gulp-dest-atomic: "npm:^1.0.5"
+    http-server: "npm:^0.10.0"
+    husky: "npm:^7.0.4"
+    immutability-helper: "npm:^3.0.0"
+    jest: "npm:^29.5.0"
+    jest-css-modules: "npm:^2.1.0"
+    jest-environment-jsdom: "npm:^29.5.0"
+    kefir: "npm:^3.8.3"
+    kefir-bus: "npm:^2.2.0"
+    kefir-cast: "npm:^3.3.0"
+    kefir-stopper: "npm:^2.1.0"
+    lint-staged: "npm:^12.3.5"
+    live-set: "npm:^1.0.0"
+    lodash: "npm:^4.14.0"
+    map-indexed-xf: "npm:^1.0.0"
+    matches-selector-ng: "npm:^1.0.0"
+    mock-webstorage: "npm:^1.0.3"
+    notp: "npm:^2.0.3"
+    order-manager: "npm:^1.0.3"
+    page-parser-tree: "npm:^0.4.0"
+    pdelay: "npm:^2.0.0"
+    postcss: "npm:^8.4.21"
+    postcss-csso: "npm:^6.0.1"
+    postcss-loader: "npm:^7.2.4"
+    postcss-selector-parser: "npm:^2.2.0"
+    prettier: "npm:^3.0.3"
+    process: "npm:^0.11.10"
+    querystring-es3: "npm:^0.2.1"
+    react: "npm:^17.0.2"
+    react-dom: "npm:^17.0.2"
+    react-draggable-list: "npm:^4.0.2"
+    react-smooth-collapse: "npm:^2.0.1"
+    seed-random: "npm:^2.2.0"
+    sha.js: "npm:^2.4.8"
+    simple-encryptor: "npm:^4.0.0"
+    sinon: "npm:^11.1.1"
+    sinon-test: "npm:^3.1.0"
+    source-map-loader: "npm:^5.0.0"
+    stdio: "npm:^0.2.6"
+    style-loader: "npm:^3.3.2"
+    stylelint: "npm:^15.6.2"
+    stylelint-config-css-modules: "npm:^4.2.0"
+    stylelint-config-standard: "npm:^33.0.0"
+    synchd: "npm:^1.0.1"
+    tag-tree: "npm:^1.0.0"
+    thirty-two: "npm:^1.0.1"
+    transducers.js: "npm:^0.3.2"
+    typed-emitter: "npm:^2.1.0"
+    typescript: "npm:^5.3.3"
+    ud: "npm:^3.3.1"
+    ud-kefir: "npm:^2.0.1"
+    webpack: "npm:^5.76.3"
+  languageName: unknown
+  linkType: soft
 
 "call-bind@npm:^1.0.0, call-bind@npm:^1.0.2":
   version: 1.0.2
@@ -6925,111 +7030,6 @@ __metadata:
   checksum: 10/2d30b157a91fe1c1d7c6f653cbf263f039be6c5bfa959245a16d4ee191fc0f2af86c08545b6e6beeb041c56b574d2d5b9f95343d378ab49c0f37394d541e7fc8
   languageName: node
   linkType: hard
-
-"inboxsdk@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "inboxsdk@workspace:."
-  dependencies:
-    "@babel/cli": "npm:^7.23.0"
-    "@babel/core": "npm:^7.23.0"
-    "@babel/node": "npm:^7.22.19"
-    "@babel/plugin-transform-runtime": "npm:^7.22.15"
-    "@babel/preset-env": "npm:^7.22.20"
-    "@babel/preset-react": "npm:^7.22.15"
-    "@babel/preset-typescript": "npm:^7.23.0"
-    "@babel/register": "npm:^7.22.15"
-    "@inboxsdk/examples": "workspace:*"
-    "@macil/simple-base-converter": "npm:^1.0.0"
-    "@types/asap": "npm:^2.0.0"
-    "@types/classnames": "npm:^2.2.8"
-    "@types/gulp": "npm:^4.0.6"
-    "@types/http-server": "npm:^0.10.1"
-    "@types/jest": "npm:^29"
-    "@types/kefir": "npm:^3.8.7"
-    "@types/lazypipe": "npm:^0.0.31"
-    "@types/lodash": "npm:^4.14.161"
-    "@types/node": "npm:^24.2.0"
-    "@types/react": "npm:^17.0.11"
-    "@types/react-dom": "npm:^17.0.7"
-    "@types/sinon": "npm:^10.0.2"
-    "@types/sinon-test": "npm:^2.4.0"
-    "@types/transducers.js": "npm:^0.3.0"
-    "@types/vinyl-source-stream": "npm:^0.0.30"
-    "@typescript-eslint/eslint-plugin": "npm:^5.59.8"
-    "@typescript-eslint/parser": "npm:^5.59.8"
-    asap: "npm:^2.0.3"
-    auto-html: "npm:^1.0.4"
-    babel-jest: "npm:^29"
-    babel-loader: "npm:^9.1.2"
-    babel-plugin-transform-inline-environment-variables: "npm:^0.4.3"
-    bignumber.js: "npm:^9.0.1"
-    bimapcache: "npm:^2.0.0"
-    buffer: "npm:^6.0.3"
-    classnames: "npm:^2.2.5"
-    combokeys-capture: "npm:^2.4.2"
-    concat-stream: "npm:^2.0.0"
-    contain-by-screen: "npm:^1.0.3"
-    css-loader: "npm:^6.7.3"
-    eslint: "npm:^8.41.0"
-    eslint-plugin-deprecate: "npm:^0.7.0"
-    eslint-plugin-react: "npm:^7.32.2"
-    fast-deep-equal: "npm:^3.1.3"
-    fast-glob: "npm:^3.2.5"
-    gulp: "npm:^4.0.2"
-    gulp-dest-atomic: "npm:^1.0.5"
-    http-server: "npm:^0.10.0"
-    husky: "npm:^7.0.4"
-    immutability-helper: "npm:^3.0.0"
-    jest: "npm:^29.5.0"
-    jest-css-modules: "npm:^2.1.0"
-    jest-environment-jsdom: "npm:^29.5.0"
-    kefir: "npm:^3.8.3"
-    kefir-bus: "npm:^2.2.0"
-    kefir-cast: "npm:^3.3.0"
-    kefir-stopper: "npm:^2.1.0"
-    lint-staged: "npm:^12.3.5"
-    live-set: "npm:^1.0.0"
-    lodash: "npm:^4.14.0"
-    map-indexed-xf: "npm:^1.0.0"
-    matches-selector-ng: "npm:^1.0.0"
-    mock-webstorage: "npm:^1.0.3"
-    notp: "npm:^2.0.3"
-    order-manager: "npm:^1.0.3"
-    page-parser-tree: "npm:^0.4.0"
-    pdelay: "npm:^2.0.0"
-    postcss: "npm:^8.4.21"
-    postcss-csso: "npm:^6.0.1"
-    postcss-loader: "npm:^7.2.4"
-    postcss-selector-parser: "npm:^2.2.0"
-    prettier: "npm:^3.0.3"
-    process: "npm:^0.11.10"
-    querystring-es3: "npm:^0.2.1"
-    react: "npm:^17.0.2"
-    react-dom: "npm:^17.0.2"
-    react-draggable-list: "npm:^4.0.2"
-    react-smooth-collapse: "npm:^2.0.1"
-    seed-random: "npm:^2.2.0"
-    sha.js: "npm:^2.4.8"
-    simple-encryptor: "npm:^4.0.0"
-    sinon: "npm:^11.1.1"
-    sinon-test: "npm:^3.1.0"
-    source-map-loader: "npm:^5.0.0"
-    stdio: "npm:^0.2.6"
-    style-loader: "npm:^3.3.2"
-    stylelint: "npm:^15.6.2"
-    stylelint-config-css-modules: "npm:^4.2.0"
-    stylelint-config-standard: "npm:^33.0.0"
-    synchd: "npm:^1.0.1"
-    tag-tree: "npm:^1.0.0"
-    thirty-two: "npm:^1.0.1"
-    transducers.js: "npm:^0.3.2"
-    typed-emitter: "npm:^2.1.0"
-    typescript: "npm:^5.3.3"
-    ud: "npm:^3.3.1"
-    ud-kefir: "npm:^2.0.1"
-    webpack: "npm:^5.76.3"
-  languageName: unknown
-  linkType: soft
 
 "indent-string@npm:^4.0.0":
   version: 4.0.0

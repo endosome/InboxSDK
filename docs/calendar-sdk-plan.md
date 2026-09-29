@@ -490,8 +490,8 @@ gulp`(bundle + example),`yarn typecheck`0 errors,`yarn
 test`187 tests / 22 suites (420 → 187: 238 tests left with the deleted Gmail code, 5 added),`yarn
 lint`, `yarn
 lint:stylelint` (`--allow-empty-input`), grep gate for `GmailDriver|dom-driver/gmail|mail.google.com|inboxsdk.com|pubsub|mailfoogae|
-isStreakAppId|data-inboxsdk-`empty; the built bundle was also loaded in jsdom (resolves on calendar origin, rejects elsewhere). _Deliberately deferred:_ pruning Gmail-only dependencies (react, page-parser-tree, order-manager, …) and`yarn.lock`; the `platform-implementation-js`directory name kept;`xhr-proxy-factory`
-kept dormant; the old README contribution guidelines were replaced, not ported.
+isStreakAppId|data-inboxsdk-`empty; the built bundle was also loaded in jsdom (resolves on calendar origin, rejects elsewhere). _Deferred then, done in the audit after Phase 8:_ 24 unreachable modules and their tests (kefir stream helpers, `stopper-pool`, `toLiveSet`, `ErrorCollector`, `attemptWithRetries`, `waitForAsync`, `censorJSONTree`, …; `xhr-proxy-factory`and`censorHTMLtree`are kept for the reserved MAIN-world canary and fixture sanitising) were deleted and 36 unused runtime dependencies (react, ud, sha.js, bignumber, transducers, …) were dropped from`package.json`. The bundle was already lean (only lodash `remove`/`uniq`, kefir, kefir-stopper, asap, events); this only shrinks install size and maintenance surface. _Still deferred:_ the `platform-implementation-js`
+directory name.
 
 **Phase 2 — Calendar bootstrap. DONE on branch `calendar-sdk-phase2`.** _Goal:_
 SDK loads on Calendar; route, root and user info work from a real content

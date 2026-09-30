@@ -405,7 +405,7 @@ may use HTML strings in the content script (Trusted Types do not apply there, RE
 overlay layer over the grid (immune to re-render but must track layout, scroll
 and drag) — spike before choosing.
 
-### 7.4.1 Overlay layer (design, not built)
+### 7.4.1 Overlay layer (hover card: planned, see `hover-card-plan.md`)
 
 For UI that must not live inside Calendar's re-rendered subtrees — the
 motivating case is a **hover card** on an event chip — the alternative to the

@@ -951,3 +951,31 @@ document level and **ignore key events whose target is a native `<button>`**; a
 `span[role=button][tabindex=0]` is NOT ignored (verified: `e` opened the editor,
 `m` switched to month, even with `stopPropagation()` on the element). So every
 interactive control the SDK injects must be a native `<button>`.
+
+### 1.25 Hover on event chips, and where a card can live [V: `hover-probe.mjs`, week view]
+
+- **No native hover UI.** A chip has no `title` and no `aria-label`; hovering
+  one changes a class on a nearby element (hover style) and shows no tooltip.
+  Calendar itself listens for `mouseenter`/`mouseleave` on the chip
+  (`jsaction="… mouseenter:…; mouseleave:…"`), so anything of ours must be a
+  passive listener.
+- **Events reach us.** A capture listener on `document` sees `pointerover`,
+  `pointerenter`, `mouseover`, `mouseenter`, `pointermove`, `pointerleave`,
+  `mouseleave`, `mouseout` for a hovered chip.
+- **Chips are clipped.** Ancestors up to the grid have `overflow: hidden` and
+  the grid itself scrolls in its own container (`overflow: scroll/auto`), so a
+  card appended inside a chip or the grid would be cut off: it has to live
+  outside.
+- **A body-level `position: fixed` layer** (z-index 1000) paints above the grid,
+  is not removed by Calendar's re-renders (1.5 s observed) and stays _below_
+  Calendar's popovers: the overlay host `#yDmH0d` is
+  `position: absolute; z-index: 5004` and the popover dialog is
+  `position: fixed; z-index: 1005` inside it, so any body-level layer with a
+  z-index below 5004 is under every popover and dialog.
+- **During a drag** the ghost chip exists outside `[role=main]` (1 element)
+  while the grid still holds all its chips — the existing chip-eligibility rules
+  already exclude it.
+- Body: `position: static; overflow: hidden`; the page does not scroll
+  (`scrollY` 0), the grid does. Chips: 17 of 23 in the fixture carry `tabindex`
+  and `role`; the others are not keyboard-focusable.
+- **Not yet observed:** overlapping chips, month "+N more", touch, drag timing.

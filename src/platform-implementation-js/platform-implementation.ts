@@ -24,6 +24,9 @@ import User from './namespaces/user';
 import type { SelectorOverrides } from './dom-driver/google-calendar/selectors';
 import type { InvalidSelectorReporter } from './lib/dom/mergeSelectorOverrides';
 
+const TAKEOVER_ATTR = 'data-calsdk-takeover';
+const TAKEOVER_EVENT = 'calsdk-takeover';
+
 export const CALENDAR_ORIGIN = 'https://calendar.google.com';
 
 /** API versions this implementation can serve. */
@@ -125,14 +128,51 @@ export function makePlatformImplementation(
   }
 
   if (opts.reporter) setReporter(opts.reporter);
+
+  // One live SDK per appId: a newer load() replaces an older one, even across
+  // script realms (an extension that was reloaded leaves its old content script
+  // running), so the page never gets two sets of injected nodes for one app.
+  const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  let superseded = false;
+  let live: PlatformImplementation | null = null;
+  const onTakeover = () => {
+    const [appId, other] = (
+      document.documentElement.getAttribute(TAKEOVER_ATTR) ?? ''
+    ).split('\n');
+    if (appId === opts.appId && other !== token) {
+      superseded = true;
+      live?.destroy();
+    }
+  };
+  document.addEventListener(TAKEOVER_EVENT, onTakeover);
+  document.documentElement.setAttribute(
+    TAKEOVER_ATTR,
+    `${opts.appId}\n${token}`,
+  );
+  document.dispatchEvent(new Event(TAKEOVER_EVENT));
+
   const driver = new CalendarDriver(opts.appId, {
     selectorOverrides: opts.selectorOverrides,
     onInvalidSelector: opts.onInvalidSelector,
     readyTimeoutMs: opts.readyTimeoutMs,
   });
   return driver.onready.then(
-    () => new PlatformImplementation(driver, opts),
+    () => {
+      if (superseded) {
+        driver.destroy();
+        document.removeEventListener(TAKEOVER_EVENT, onTakeover);
+        throw new Error(
+          `CalendarSDK: load() for appId "${opts.appId}" was superseded by a newer load() of the same appId`,
+        );
+      }
+      live = new PlatformImplementation(driver, opts);
+      live.on('destroy', () =>
+        document.removeEventListener(TAKEOVER_EVENT, onTakeover),
+      );
+      return live;
+    },
     (err) => {
+      document.removeEventListener(TAKEOVER_EVENT, onTakeover);
       driver.destroy();
       throw err;
     },

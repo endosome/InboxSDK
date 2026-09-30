@@ -6,6 +6,8 @@ import type {
   EventRef,
   EventSegment,
   EventViewDriver,
+  HoverCardDescriptor,
+  HoverCardHandle,
 } from '../../../driver-interfaces/event-view-driver';
 
 /** What a view driver needs from the services that own it. */
@@ -15,6 +17,10 @@ export interface ViewHost {
     driver: CalendarEventViewDriver,
     descriptor: BadgeDescriptor,
   ): BadgeHandle;
+  addHoverCard(
+    driver: CalendarEventViewDriver,
+    descriptor: HoverCardDescriptor,
+  ): HoverCardHandle;
 }
 
 /** One rendered chip of a calendar item. Lives as long as the chip shows that item. */
@@ -56,6 +62,10 @@ export default class CalendarEventViewDriver implements EventViewDriver {
 
   addBadge(descriptor: BadgeDescriptor): BadgeHandle {
     return this.#host.addBadge(this, descriptor);
+  }
+
+  addHoverCard(descriptor: HoverCardDescriptor): HoverCardHandle {
+    return this.#host.addHoverCard(this, descriptor);
   }
 
   getStopper(): Stopper {

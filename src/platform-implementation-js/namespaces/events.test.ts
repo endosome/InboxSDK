@@ -39,6 +39,10 @@ function viewDriver(eventId: string, kind: EventKind = 'event') {
     {
       getSegment: () => ({ index: 0, count: 1, isPrimary: true }),
       addBadge: () => ({ update: () => undefined, remove: () => undefined }),
+      addHoverCard: () => ({
+        update: () => undefined,
+        remove: () => undefined,
+      }),
     },
   );
 }

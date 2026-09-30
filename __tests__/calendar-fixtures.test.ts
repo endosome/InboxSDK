@@ -15,6 +15,7 @@ import {
 import { runCompatChecks } from '../src/platform-implementation-js/compat/checks';
 import EventRegistry from '../src/platform-implementation-js/dom-driver/google-calendar/services/event-registry';
 import PopoverRegistry from '../src/platform-implementation-js/dom-driver/google-calendar/services/popover-registry';
+import HoverCardService from '../src/platform-implementation-js/dom-driver/google-calendar/services/hover-card-service';
 import ToolbarService from '../src/platform-implementation-js/dom-driver/google-calendar/services/toolbar-service';
 import CalendarEventEditorViewDriver from '../src/platform-implementation-js/dom-driver/google-calendar/views/calendar-event-editor-view-driver';
 import { classifyRoute } from '../src/platform-implementation-js/dom-driver/google-calendar/route-classifier';
@@ -346,5 +347,80 @@ describe('toolbar', () => {
     expect(container.nextElementSibling).toBe(search.parentElement);
     expect(document.querySelector('header')!.contains(container)).toBe(true);
     svc.stop();
+  });
+});
+
+describe('hover card', () => {
+  test('on the real week markup a hovered chip gets a card next to it (chips found, view mapped, listeners passive)', async () => {
+    jest.useFakeTimers();
+    load('week');
+    // eslint-disable-next-line prefer-const
+    let registry!: EventRegistry;
+    const service = new HoverCardService({
+      document,
+      selectors: selectors(),
+      appId: 'fx',
+      getDriverForElement: (el) => registry.getDriverForElement(el),
+    });
+    registry = new EventRegistry(
+      document,
+      selectors(),
+      noBadges,
+      undefined,
+      service,
+    );
+    registry.start();
+    service.start();
+    const driver = registry
+      .getAll()
+      .find((d) => d.getEventRef().kind === 'event')!;
+    driver.addHoverCard({
+      render: (c) => {
+        c.textContent = 'hi';
+      },
+    });
+    const chip = driver.element;
+    chip.getBoundingClientRect = () =>
+      ({
+        left: 300,
+        top: 300,
+        right: 380,
+        bottom: 350,
+        width: 80,
+        height: 50,
+      }) as DOMRect;
+    const real = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function () {
+      return (this as Element).hasAttribute('data-calsdk-hover-card')
+        ? ({
+            left: 0,
+            top: 0,
+            right: 200,
+            bottom: 80,
+            width: 200,
+            height: 80,
+          } as DOMRect)
+        : real.call(this);
+    };
+    const seen = jest.fn();
+    document.addEventListener('pointerenter', seen, true);
+    const e = new MouseEvent('pointerenter', {
+      bubbles: false,
+      cancelable: true,
+    });
+    Object.defineProperty(e, 'pointerType', { value: 'mouse' });
+    chip.dispatchEvent(e);
+    expect(e.defaultPrevented).toBe(false); // passive: Calendar's own mouseenter handling is untouched
+    await jest.advanceTimersByTimeAsync(400);
+    const frame = document.querySelector(
+      '[data-calsdk-hover-card]',
+    ) as HTMLElement;
+    expect(frame.textContent).toBe('hi');
+    expect(parseInt(frame.style.left)).toBeGreaterThanOrEqual(380);
+    document.removeEventListener('pointerenter', seen, true);
+    Element.prototype.getBoundingClientRect = real;
+    service.stop();
+    registry.stop();
+    jest.useRealTimers();
   });
 });

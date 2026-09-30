@@ -18,6 +18,7 @@ import type { GotoTarget } from './route-url';
 import RouteService from './services/route-service';
 import EventRegistry from './services/event-registry';
 import InjectionReconciler from './services/injection-reconciler';
+import HoverCardService from './services/hover-card-service';
 import ToolbarService from './services/toolbar-service';
 import type {
   ToolbarButtonDescriptor,
@@ -56,6 +57,7 @@ export default class CalendarDriver implements Driver {
   #editorService: EditorService | null = null;
   #compatService: CompatService | null = null;
   #toolbarService: ToolbarService | null = null;
+  #hoverCards: HoverCardService | null = null;
   readonly #idMap = new CalendarIdMap();
   #destroyed = false;
 
@@ -103,14 +105,23 @@ export default class CalendarDriver implements Driver {
       appId: this.#appId,
       getDriverForElement: (el) => this.#eventRegistry?.getDriverForElement(el),
     });
+    this.#hoverCards = new HoverCardService({
+      document,
+      selectors: this.selectors,
+      appId: this.#appId,
+      getDriverForElement: (el) => this.#eventRegistry?.getDriverForElement(el),
+    });
     this.#eventRegistry = new EventRegistry(
       document,
       this.selectors,
       this.#reconciler,
       this.#idMap,
+      this.#hoverCards,
     );
     this.#eventRegistry.start();
     this.#reconciler.start();
+    this.#hoverCards.start();
+    this.#routeService.subscribe(() => this.#hoverCards?.hide());
     this.#popoverRegistry = new PopoverRegistry({
       document,
       selectors: this.selectors,
@@ -226,6 +237,7 @@ export default class CalendarDriver implements Driver {
     this.#destroyed = true;
     this.#compatService?.stop();
     this.#toolbarService?.stop();
+    this.#hoverCards?.stop();
     this.#editorService?.stop();
     this.#popoverRegistry?.stop();
     this.#reconciler?.stop();

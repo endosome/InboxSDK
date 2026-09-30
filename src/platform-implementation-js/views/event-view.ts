@@ -5,6 +5,8 @@ import type {
   EventRef,
   EventSegment,
   EventViewDriver,
+  HoverCardContext,
+  HoverCardHandle,
 } from '../driver-interfaces/event-view-driver';
 
 /**
@@ -17,6 +19,24 @@ import type {
 export type EventViewBadgeDescriptor = Omit<BadgeDescriptor, 'onClick'> & {
   /** Called with this view when the badge is clicked. */
   onClick?: (eventView: EventView) => void;
+};
+
+export type EventViewHoverCardDescriptor = {
+  /**
+   * Fill `container`; called on every showing with a fresh element. May be async and may return
+   * a cleanup function. `signal` aborts when the card hides or the pointer moves to another chip.
+   */
+  render: (
+    container: HTMLElement,
+    eventView: EventView,
+    context: HoverCardContext,
+  ) => void | (() => void) | Promise<void | (() => void)>;
+  /** Hover time before showing, ms. Default 350 (0–2000). */
+  delayMs?: number;
+  /** Let the pointer move onto the card. Default false. */
+  interactive?: boolean;
+  /** Accessible name of the card. */
+  label?: string;
 };
 
 export default class EventView extends SafeEventEmitter {
@@ -65,6 +85,22 @@ export default class EventView extends SafeEventEmitter {
     return this.#driver.addBadge({
       ...rest,
       ...(onClick && { onClick: () => onClick(this) }),
+    });
+  }
+
+  /**
+   * Show a card next to this chip while it is hovered (or focused). `render` is
+   * called for every showing with a new container. The card is removed with
+   * this view; use the handle to change or remove it.
+   */
+  addHoverCard(descriptor: EventViewHoverCardDescriptor): HoverCardHandle {
+    if (this.destroyed) {
+      throw new Error('addHoverCard: this EventView has been destroyed');
+    }
+    const { render, ...rest } = descriptor;
+    return this.#driver.addHoverCard({
+      ...rest,
+      render: (container, context) => render(container, this, context),
     });
   }
 }

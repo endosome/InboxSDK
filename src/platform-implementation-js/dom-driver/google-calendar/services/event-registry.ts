@@ -3,6 +3,10 @@ import type SelectorRegistry from '../../../lib/dom/selectorRegistry';
 import { reportError, reportEvent } from '../../../lib/reporter';
 import type { CalendarSelectorKey } from '../selectors';
 import type CalendarIdMap from './calendar-id-map';
+import type {
+  HoverCardDescriptor,
+  HoverCardHandle,
+} from '../../../driver-interfaces/event-view-driver';
 import { eventRefFromChip, eventRefKey } from '../identity';
 import type {
   BadgeDescriptor,
@@ -18,6 +22,14 @@ export interface BadgeHost {
     driver: CalendarEventViewDriver,
     descriptor: BadgeDescriptor,
   ): BadgeHandle;
+}
+
+/** The part of hover cards the registry needs (implemented by the hover card service). */
+export interface HoverCardHost {
+  addHoverCard(
+    driver: CalendarEventViewDriver,
+    descriptor: HoverCardDescriptor,
+  ): HoverCardHandle;
 }
 
 type Subscriber = (driver: CalendarEventViewDriver) => void;
@@ -46,6 +58,7 @@ const MAX_REPORTED_TOKENS = 20;
 export default class EventRegistry implements ViewHost {
   readonly #badges: BadgeHost;
   readonly #idMap: CalendarIdMap | undefined;
+  readonly #hoverCards: HoverCardHost | undefined;
   readonly #doc: Document;
   readonly #selectors: SelectorRegistry<CalendarSelectorKey>;
   readonly #entries = new Map<Element, CalendarEventViewDriver>();
@@ -59,7 +72,9 @@ export default class EventRegistry implements ViewHost {
     selectors: SelectorRegistry<CalendarSelectorKey>,
     badges: BadgeHost,
     idMap?: CalendarIdMap,
+    hoverCards?: HoverCardHost,
   ) {
+    this.#hoverCards = hoverCards;
     this.#idMap = idMap;
     this.#badges = badges;
     this.#doc = doc;
@@ -115,6 +130,16 @@ export default class EventRegistry implements ViewHost {
     descriptor: BadgeDescriptor,
   ): BadgeHandle {
     return this.#badges.addBadge(driver, descriptor);
+  }
+
+  addHoverCard(
+    driver: CalendarEventViewDriver,
+    descriptor: HoverCardDescriptor,
+  ): HoverCardHandle {
+    if (!this.#hoverCards) {
+      throw new Error('addHoverCard: hover cards are not available');
+    }
+    return this.#hoverCards.addHoverCard(driver, descriptor);
   }
 
   /** The view of a chip element, if that chip currently has one. */

@@ -38,6 +38,31 @@ export type BadgeHandle = {
   remove(): void;
 };
 
+export type HoverCardContext = { signal: AbortSignal };
+
+export type HoverCardDescriptor = {
+  /**
+   * Fill `container` (fresh for every showing). May be async and may return a cleanup
+   * function; `signal` aborts when the card hides or the pointer moves to another chip.
+   */
+  render(
+    container: HTMLElement,
+    context: HoverCardContext,
+  ): void | (() => void) | Promise<void | (() => void)>;
+  /** Hover time before showing, ms (default 350, clamped to 0–2000). */
+  delayMs?: number;
+  /** Let the pointer move from the chip onto the card. Default false. */
+  interactive?: boolean;
+  /** Accessible name of the card. */
+  label?: string;
+};
+
+/** Returned by `addHoverCard`. */
+export type HoverCardHandle = {
+  update(changes: Partial<HoverCardDescriptor>): void;
+  remove(): void;
+};
+
 /** What the public `EventView` needs from a site driver. */
 export interface EventViewDriver {
   getEventRef(): EventRef;
@@ -46,6 +71,7 @@ export interface EventViewDriver {
   /** Derived per call: the same event can flip between all-day and timed. */
   isAllDay(): boolean;
   addBadge(descriptor: BadgeDescriptor): BadgeHandle;
+  addHoverCard(descriptor: HoverCardDescriptor): HoverCardHandle;
   /** Ends when the chip goes away or stops being this event. */
   getStopper(): Stopper;
 }

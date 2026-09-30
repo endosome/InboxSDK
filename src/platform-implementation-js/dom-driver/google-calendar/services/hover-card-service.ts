@@ -265,8 +265,10 @@ export default class HoverCardService {
   #onPointerLeave(e: PointerEvent) {
     const cur = this.#current;
     if (!cur || cur.via !== 'hover') return;
-    const leftFrame =
-      cur.frame && e.target instanceof Node && cur.frame.contains(e.target);
+    // `pointerleave` fires for every element the pointer leaves: only the frame itself (not one of
+    // its children, which the pointer leaves all the time while moving inside the card) or the chip
+    // means "the pointer is gone"
+    const leftFrame = !!cur.frame && e.target === cur.frame;
     if (leftFrame || e.target === cur.chip) {
       if (cur.interactive && cur.frame) {
         if (cur.leaveTimer) clearTimeout(cur.leaveTimer);

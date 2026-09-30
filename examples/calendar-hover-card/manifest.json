@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "CalendarSDK hover card example",
+  "version": "0.0.1",
+  "description": "Shows a card next to an event chip on hover or keyboard focus.",
+  "content_scripts": [
+    {
+      "matches": ["https://calendar.google.com/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}

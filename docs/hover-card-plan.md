@@ -1,7 +1,8 @@
 # Hover card — plan
 
-Status: **planned** (this document), build follows in the order of §9. Related:
-plan §7.4.1 (overlay layer), RE §1.25 (hover facts), `docs/api.md`.
+Status: **built** in the order of §9 (positioning → service → wiring → example
+and live test → docs); live results are recorded in §10. Related: plan §7.4.1
+(overlay layer), RE §1.25 (hover facts), `docs/api.md`.
 
 ## 1. Goal and scope
 
@@ -197,3 +198,37 @@ pass with the hover listeners installed.
    driver interface, `EventView.addHoverCard`, `CalendarDriver`, public types.
 2. Example + live test; fix what it finds. 5. Docs. 6. Regression of all suites
    and package check. Each step is its own commit.
+
+## 10. Result (live, real Chrome)
+
+`extension-hover-card.mjs` (with `examples/calendar-hover-card`): **33 of 33
+checks pass** — no card before the delay, shown after it beside the chip (never
+over it) and inside the viewport, `role=tooltip` / `role=dialog` for interactive
+cards, layer on `body` with z-index below Calendar's overlay host (5004) and
+ignoring the pointer, hidden at once on leave with `signal` aborted and cleanup
+run, hidden on pointer down, wheel, Escape and route change, keyboard focus
+shows it without delay and Escape hides it, no card while a popover is open, the
+pointer can cross onto an interactive card and use its button without Calendar
+opening a popover or navigating, exactly one card for overlapping chips (the one
+under the pointer), month view, dark and light theme from the real grid
+background, a 420 px window (≤ 404 px wide, chip uncovered), Arabic/RTL (card on
+the left), and the per-frame meter shows no card lingering after the pointer
+left.
+
+Bugs the live test found and fixed (each has a unit test now):
+
+1. **The grace timer closed an interactive card while the pointer was still
+   inside it.** `pointerleave` fires for every element the pointer leaves,
+   including children of the card; only the frame itself (or the chip) means
+   "gone" (`extension-hover-card.mjs`, "pointer can cross onto the card").
+2. Using an interactive card (click, pointerdown, scroll, Enter on its own
+   button) must not close it: those document-level triggers now ignore events
+   from inside the frame; Escape still closes it.
+
+Harness lessons (not SDK bugs): Chrome replays the last pointer position after a
+page load as a hover — park the mouse before a scenario; a popover left open
+(correctly) blocks cards, so hide-trigger scenarios start from a fresh page.
+
+Known limits (also in `api.md`): touch devices get no card; chips without
+`tabindex` are hover-only; two apps' cards on one chip are independent layers
+(best-effort, not coordinated).

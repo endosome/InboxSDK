@@ -211,6 +211,36 @@ export interface BadgeHandle {
   remove(): void;
 }
 
+export interface HoverCardContext {
+  /** Aborts when the card hides or the pointer moves to another chip: stop work, do not touch the container. */
+  readonly signal: AbortSignal;
+}
+
+export interface HoverCardDescriptor {
+  /**
+   * Fill `container`. Called for EVERY showing with a fresh element. May be async (nothing is
+   * shown until it resolves) and may return a cleanup function, run when the card hides.
+   * Build DOM; the SDK never accepts HTML strings from apps.
+   */
+  render(
+    container: HTMLElement,
+    eventView: EventView,
+    context: HoverCardContext,
+  ): void | (() => void) | Promise<void | (() => void)>;
+  /** Hover time before showing, ms. Default 350; clamped to 0–2000. Keyboard focus shows it at once. */
+  delayMs?: number;
+  /** Let the pointer move from the chip onto the card (links, buttons). Default false: the card ignores the pointer. */
+  interactive?: boolean;
+  /** Accessible name (`aria-label`); interactive cards default to "Event details". */
+  label?: string;
+}
+
+export interface HoverCardHandle {
+  /** Takes effect with the next showing. */
+  update(changes: Partial<HoverCardDescriptor>): void;
+  remove(): void;
+}
+
 /** One rendered chip of a calendar item. */
 export interface EventView {
   readonly destroyed: boolean;
@@ -225,6 +255,12 @@ export interface EventView {
    * re-inserts it whenever it disappears; it is removed with the view.
    */
   addBadge(descriptor: BadgeDescriptor): BadgeHandle;
+  /**
+   * Show a card beside this chip while it is hovered (mouse/pen) or focused (keyboard). It lives
+   * in an SDK-owned layer, is hidden on drag, scroll, click, Escape, route change or when a popover
+   * or dialog opens, and is removed with this view.
+   */
+  addHoverCard(descriptor: HoverCardDescriptor): HoverCardHandle;
   on(event: 'destroy', listener: () => void): this;
 }
 

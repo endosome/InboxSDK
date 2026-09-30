@@ -97,7 +97,8 @@ different `calendarId`s.
 
 `getEventRef()` (never changes for a view), `getSegment()`
 (`{ index, count, isPrimary }`: a multi-day event has one chip per day/week
-row), `isAllDay()`, `addBadge(descriptor): BadgeHandle`.
+row), `isAllDay()`, `addBadge(descriptor): BadgeHandle`,
+`addHoverCard(descriptor): HoverCardHandle`.
 
 - A view is destroyed when its chip goes away or stops showing that item.
   Calendar replaces the chip element after a cross-day drag, so your handler
@@ -112,6 +113,43 @@ native `<button>` (focusable, Enter/Space activate it, `aria-label` = `title` or
 it); one without is a plain span outside the tab order. `BadgeHandle`:
 `update(changes)` (keeps its position among your badges), `remove()`. In chips
 narrower than 72 px the badge is shown as a dot.
+
+**`addHoverCard({ render, delayMs?, interactive?, label? })`** — a card beside
+the chip while the user hovers it (mouse or pen) or focuses it with the
+keyboard. Design and rationale: [`hover-card-plan.md`](./hover-card-plan.md).
+
+- `render(container, eventView, { signal })` is called for **every showing**
+  with a **new** `container`; fill it with DOM (no HTML strings). It may be
+  `async` — nothing is shown until it resolves, so a slow `Data.getEvent()`
+  never paints late — and may return a **cleanup** function, run when the card
+  hides. `signal` aborts when the card hides or the pointer moves to another
+  chip: stop work and do not touch the container. A throwing/rejecting `render`
+  is reported (`Logger`) and shows nothing.
+- `delayMs` (default 350, clamped to 0–2000) is the hover time before showing;
+  keyboard focus of a chip shows the card at once (only chips Calendar makes
+  focusable — 17 of 23 in a typical week; the rest are hover-only).
+- `interactive: true` lets the pointer move from the chip onto the card (120 ms
+  grace) so it can hold buttons and links; the card is then `role=dialog` (name:
+  `label`, default "Event details"), and pointer/keys inside it are kept away
+  from Calendar's handlers (Escape and Tab pass). The default card is
+  `role=tooltip` and ignores the pointer completely.
+- Several `addHoverCard` calls on one view are stacked in one frame in
+  registration order. `HoverCardHandle`: `update(changes)` (applies from the
+  next showing), `remove()`. The card is removed with the view.
+- **Hides on:** the pointer leaving the chip, pointer down (click or drag
+  start), click, scroll or wheel outside the card, Escape, Enter/Space (which
+  open Calendar's popover), a route change, an event popover or any dialog
+  opening, window blur, the chip going away, `sdk.destroy()`. **Never shown**
+  for touch, while a button is held (dragging) or while a popover/dialog is
+  open.
+- **Placement:** beside the chip — right (left in RTL), then the other side,
+  then below, then above — inside the viewport with an 8 px margin, at most 360
+  px wide (shrunk on narrow windows), never over the chip so the chip's own
+  click still works. It lives in an SDK-owned layer on `body` with
+  `z-index: 4000`, below Calendar's overlay host (5004), so every Calendar
+  popover covers it. Light/dark is taken from the real background of the grid
+  (`container` is inside a frame with `data-calsdk-theme`).
+- Not offered: cards for anything but event chips, touch, persistent cards.
 
 ### `EventPopoverView`
 

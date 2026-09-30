@@ -518,6 +518,32 @@ describe('interactive cards', () => {
     h.service.stop();
   });
 
+  test('the pointer moving between elements INSIDE the card does not start the grace timer', async () => {
+    const h = harness();
+    let a!: HTMLElement;
+    h.views[0].addHoverCard({
+      interactive: true,
+      render: (c) => {
+        a = document.createElement('button');
+        c.append(a);
+      },
+    });
+    enter(h.chips[0]);
+    await settle(400);
+    const frame = frames()[0] as HTMLElement;
+    leave(h.chips[0]);
+    enter(frame);
+    leave(a); // leaves a child (the pointer is still inside the card)
+    enter(frame.firstElementChild!);
+    leave(frame.firstElementChild!);
+    await settle(500);
+    expect(frames()).toHaveLength(1);
+    leave(frame); // now really gone
+    await settle(130);
+    expect(frames()).toHaveLength(0);
+    h.service.stop();
+  });
+
   test('leaving the chip without reaching the card hides it after the grace', async () => {
     const h = await interactive();
     leave(h.chips[0]);

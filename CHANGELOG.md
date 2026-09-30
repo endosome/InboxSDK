@@ -17,13 +17,17 @@ removed.
 - `Router` (`registerRouteViewHandler`, `getCurrentRouteView`, `goto`) and
   `RouteView` (`getType`, `getAnchorDate`, `getSearchQuery`, `getEventRef`).
 - `Events.registerEventViewHandler` → `EventView` (`getEventRef`, `getSegment`,
-  `isAllDay`, `addBadge`); `registerEventPopoverHandler` → `EventPopoverView`
-  (`addButton`); `registerEventEditorHandler` → `EventEditorView`.
+  `isAllDay`, `addBadge`, `addHoverCard`); `registerEventPopoverHandler` →
+  `EventPopoverView` (`addButton`); `registerEventEditorHandler` →
+  `EventEditorView`.
 - `Toolbar.addButton`; `User`; `Data` (`getEvent`, `listCalendars`) with an
   optional `dataProvider`; `Compat` (`getReport`, `onIssue`, `onCompatIssue`).
 - `EventRef` identity (base id, instance id, calendar id when known, kind, raw
   token).
 - `@calendarsdk/google-api`: Calendar API data provider (you supply the token).
+- `EventView.addHoverCard`: an app-rendered card beside an event chip on hover
+  or keyboard focus, in an SDK-owned layer (async `render` with an abort signal,
+  interactive cards, hides on drag/scroll/click/Escape/navigation/popover).
 - Docs: README, getting started, API reference; compatibility runner and
   real-markup fixtures for detecting Google changes.
 

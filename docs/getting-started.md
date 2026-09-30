@@ -132,6 +132,30 @@ popover opens); the SDK puts your badge back before the next paint. Clicking a
 badge does not open Calendar's popover. In narrow chips the badge shrinks to a
 dot (the tooltip keeps the text).
 
+### A card on hover
+
+```ts
+sdk.Events.registerEventViewHandler((eventView) => {
+  eventView.addHoverCard({
+    label: 'Event summary',
+    render: async (container, view, { signal }) => {
+      const details = await sdk.Data.getEvent(view.getEventRef()); // optional, needs a dataProvider
+      if (signal.aborted) return; // the pointer already left
+      const title = document.createElement('strong');
+      title.textContent = details?.title ?? 'Event';
+      container.append(title);
+    },
+  });
+});
+```
+
+The card appears beside the chip after 350 ms of hover (or at once when the chip
+is focused with the keyboard), is built fresh for every showing, and disappears
+on leave, click, drag, scroll, Escape, navigation or when Calendar opens a
+popover. Add `interactive: true` if the card holds buttons or links; then the
+pointer may move from the chip onto it. All rules are in the
+[API reference](./api.md#eventview-one-per-chip).
+
 ## 7. Add a button to every popover
 
 ```ts

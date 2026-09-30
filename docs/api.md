@@ -14,15 +14,15 @@ Resolves once Calendar has rendered its user info (`#xUserInfo`) and routing has
 started. Rejects on another origin, an unsupported `version`, an empty `appId`,
 or after `readyTimeoutMs`.
 
-| Option              | Type                               | Meaning                                                                                                |
-| ------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `appId`             | `string` (required)                | Namespace for everything you inject; lets several apps/SDK copies coexist                              |
-| `dataProvider`      | `CalendarDataProvider`             | Source of event details (see `Data`); owned by your extension                                          |
-| `selectorOverrides` | `{ [key]: string[] }`              | Candidate selectors **prepended** to the bundled chain of a key (never replaces it)                    |
-| `onInvalidSelector` | `(key, selector) => void`          | An override selector was invalid CSS in this browser and dropped                                       |
-| `onCompatIssue`     | `(issue: CompatIssue) => void`     | Local self-check found a problem (see `Compat`)                                                        |
-| `reporter`          | `{ error(err, d?), event(n, d?) }` | Receives diagnostics (default: errors to the console, events dropped). Nothing is ever sent by the SDK |
-| `readyTimeoutMs`    | `number`                           | Default 15000                                                                                          |
+| Option              | Type                               | Meaning                                                                                                                                                                                                                                                                 |
+| ------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `appId`             | `string` (required)                | Namespace for everything you inject. **One live SDK per `appId`**: a newer `load()` with the same `appId` (a re-injected or reloaded extension) destroys the older one, so the page never gets duplicates; different `appId`s coexist. Make it unique to your extension |
+| `dataProvider`      | `CalendarDataProvider`             | Source of event details (see `Data`); owned by your extension                                                                                                                                                                                                           |
+| `selectorOverrides` | `{ [key]: string[] }`              | Candidate selectors **prepended** to the bundled chain of a key (never replaces it)                                                                                                                                                                                     |
+| `onInvalidSelector` | `(key, selector) => void`          | An override selector was invalid CSS in this browser and dropped                                                                                                                                                                                                        |
+| `onCompatIssue`     | `(issue: CompatIssue) => void`     | Local self-check found a problem (see `Compat`)                                                                                                                                                                                                                         |
+| `reporter`          | `{ error(err, d?), event(n, d?) }` | Receives diagnostics (default: errors to the console, events dropped). Nothing is ever sent by the SDK                                                                                                                                                                  |
+| `readyTimeoutMs`    | `number`                           | Default 15000                                                                                                                                                                                                                                                           |
 
 The returned `CalendarSDK` has `Events`, `Router`, `User`, `Toolbar`, `Data`,
 `Compat`, `Logger` (`error(err, details?)`, `event(name, details?)` → your

@@ -66,8 +66,11 @@ CalendarSDK.load(1, { appId: 'my-extension' }).then((sdk) => {
 ```
 
 - `1` is the API version. `appId` is any string that identifies your extension;
-  it namespaces what you inject, so several extensions (or two copies of the
-  SDK) can coexist.
+  it namespaces what you inject, so several extensions can coexist. Only one SDK
+  per `appId` is alive at a time: a second `load()` with the same `appId` (say
+  your extension re-injected its script) replaces the first, which is destroyed
+  (`sdk.on('destroy')`); a `load()` overtaken while still starting rejects with
+  a "superseded" error.
 - `load()` resolves once Calendar has rendered its user info and rejects after
   15 s (`readyTimeoutMs`) or on any other origin.
 - Load it in Chrome via `chrome://extensions` → Developer mode → **Load

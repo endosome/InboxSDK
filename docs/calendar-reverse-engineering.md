@@ -943,3 +943,11 @@ Siblings to the right: Support (`jsname=M842Cd`), Settings menu, view switcher
 (`jsname=jnPWCc`), Calendar/Tasks switch, Upgrade. Injecting a sibling before
 the Search wrapper survives view switches, popovers and 50 navigations; the
 wrapper is hidden (0×0) on settings and search routes.
+
+### 1.24 Keyboard shortcuts and injected controls [V: scratch `kb2.mjs`, `extension-toolbar.mjs`]
+
+Calendar's single-key shortcuts (`e` = edit, `m` = month, …) are handled at the
+document level and **ignore key events whose target is a native `<button>`**; a
+`span[role=button][tabindex=0]` is NOT ignored (verified: `e` opened the editor,
+`m` switched to month, even with `stopPropagation()` on the element). So every
+interactive control the SDK injects must be a native `<button>`.

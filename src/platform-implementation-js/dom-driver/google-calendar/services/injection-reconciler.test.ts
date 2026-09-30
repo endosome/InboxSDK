@@ -527,3 +527,71 @@ describe('compact badges in narrow chips', () => {
     h.reconciler.stop();
   });
 });
+
+describe('keyboard access', () => {
+  const key = (el: Element, k: string) => {
+    const e = new KeyboardEvent('keydown', {
+      key: k,
+      bubbles: true,
+      cancelable: true,
+    });
+    el.dispatchEvent(e);
+    return e;
+  };
+
+  test('a clickable badge is a native, labelled button; its keys do not leak to Calendar except Escape/Tab', () => {
+    const h = harness();
+    const chip = makeChip({ decoded: 'a owner@m' });
+    h.main.append(chip);
+    start(h);
+    const onClick = jest.fn();
+    h.views[0].addBadge({ text: 'CRM', title: 'Open in CRM', onClick });
+    const badge = badgesIn(chip)[0] as HTMLElement;
+    expect(badge.tagName).toBe('BUTTON');
+    expect((badge as HTMLButtonElement).type).toBe('button');
+    expect(badge.getAttribute('aria-label')).toBe('Open in CRM');
+
+    badge.click(); // what Enter/Space do on a native button
+    expect(onClick).toHaveBeenCalledTimes(1);
+
+    const leaked = jest.fn();
+    document.body.addEventListener('keydown', leaked);
+    key(badge, 'e'); // a Calendar shortcut
+    key(badge, 'Enter');
+    expect(leaked).not.toHaveBeenCalled();
+    key(badge, 'Escape');
+    key(badge, 'Tab');
+    expect(leaked).toHaveBeenCalledTimes(2);
+    document.body.removeEventListener('keydown', leaked);
+    h.registry.stop();
+    h.reconciler.stop();
+  });
+
+  test('a non-clickable badge is a plain span, out of the tab order', () => {
+    const h = harness();
+    const chip = makeChip({ decoded: 'a owner@m' });
+    h.main.append(chip);
+    start(h);
+    h.views[0].addBadge({ text: 'CRM' });
+    const badge = badgesIn(chip)[0] as HTMLElement;
+    expect(badge.tagName).toBe('SPAN');
+    expect(badge.hasAttribute('tabindex')).toBe(false);
+    h.registry.stop();
+    h.reconciler.stop();
+  });
+
+  test('update() that adds or removes onClick swaps the element kind', () => {
+    const h = harness();
+    const chip = makeChip({ decoded: 'a owner@m' });
+    h.main.append(chip);
+    start(h);
+    const handle = h.views[0].addBadge({ text: 'CRM' });
+    handle.update({ onClick: () => undefined });
+    expect((badgesIn(chip)[0] as HTMLElement).tagName).toBe('BUTTON');
+    handle.update({ onClick: undefined });
+    expect((badgesIn(chip)[0] as HTMLElement).tagName).toBe('SPAN');
+    expect(badgesIn(chip)).toHaveLength(1);
+    h.registry.stop();
+    h.reconciler.stop();
+  });
+});

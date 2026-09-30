@@ -106,7 +106,10 @@ row), `isAllDay()`, `addBadge(descriptor): BadgeHandle`.
 
 **`addBadge({ text?, iconUrl?, title?, onClick? })`** — at least `text` or
 `iconUrl`. Built with `textContent`/`createElement` (never HTML). `onClick`
-receives the view and does not open the popover. `BadgeHandle`:
+receives the view and does not open the popover. A badge with `onClick` is a
+native `<button>` (focusable, Enter/Space activate it, `aria-label` = `title` or
+`text`, and Calendar's single-key shortcuts such as `e`/`m` do not fire from
+it); one without is a plain span outside the tab order. `BadgeHandle`:
 `update(changes)` (keeps its position among your badges), `remove()`. In chips
 narrower than 72 px the badge is shown as a dot.
 

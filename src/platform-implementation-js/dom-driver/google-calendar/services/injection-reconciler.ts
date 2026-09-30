@@ -280,7 +280,10 @@ export default class InjectionReconciler implements BadgeHost {
   #buildBadge(badge: BadgeEntry): HTMLElement {
     const doc = this.#env.document;
     const { text, iconUrl, title, onClick } = badge.descriptor;
-    const node = doc.createElement('span');
+    // clickable badges are native buttons: focusable, Enter/Space work, and Calendar's shortcut
+    // handler ignores key events from buttons
+    const node = doc.createElement(onClick ? 'button' : 'span');
+    if (onClick) (node as HTMLButtonElement).type = 'button';
     node.setAttribute(OWNED_ATTR, this.#env.appId);
     node.setAttribute('data-calsdk-badge', '');
     node.className = 'calsdk-badge';
@@ -318,7 +321,19 @@ export default class InjectionReconciler implements BadgeHost {
         reportError(err);
       }
     });
-    if (onClick) node.classList.add('calsdk-badge--clickable');
+    if (onClick) {
+      node.classList.add('calsdk-badge--clickable');
+      node.setAttribute('aria-label', title || text || 'Badge');
+      // Keyboard: Enter/Space activate the native button (its `click`, handled above). Keys must not
+      // reach Calendar's document-level shortcuts (`e` opens the editor, `m` the month view), except
+      // Escape and Tab.
+      for (const type of ['keydown', 'keyup', 'keypress']) {
+        node.addEventListener(type, (e) => {
+          const key = (e as KeyboardEvent).key;
+          if (key !== 'Escape' && key !== 'Tab') e.stopPropagation();
+        });
+      }
+    }
     return node;
   }
 }

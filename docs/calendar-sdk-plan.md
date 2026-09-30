@@ -24,7 +24,7 @@ pending.
 | 9 Calendar API / data provider                                       | plan §10                                           |
 | 10 V1 public API                                                     | plan §4                                            |
 | 11–12 Architecture, `CalendarDriver`                                 | plan §3                                            |
-| 13 Performance / observation                                         | plan §7 (scale test still open)                    |
+| 13 Performance / observation                                         | plan §7 (scale test done: 320 chips live)          |
 | 14–16 Investigation system, change detection, UI experiments         | `calendar-compatibility-testing.md` §1–§3          |
 | 17 Test strategy                                                     | `calendar-compatibility-testing.md` §4             |
 | 18 Milestones                                                        | plan §12, §14                                      |
@@ -50,10 +50,12 @@ Verified since the first draft (see the RE log): identity for own/invited/
 shared/task/birthday/holiday chips, moved and split recurring series, RSVP
 states, drag/resize in every view, timezone/theme/density invariance, German
 locale, popover-vs-quick-create discrimination, Trusted Types constraints.
-**Still unverified and relevant to V1:** Workspace accounts (custom-domain
-calendar ids), a real MV3 content-script run (all tests used CDP), behaviour at
-hundreds of events, delete of recurring/guest events, RTL/CJK locales, narrow
-windows. These are listed as Phase 0/2 exit criteria in §12 and in the RE log
+**Since verified (phases 2–8 and the coverage pass):** a real MV3 content-script
+run, behaviour at hundreds of chips (synthetic, live), delete/undo of recurring
+instances, RTL/CJK locales (`ar he ja zh-CN de pl`), narrow windows, time-zone
+change while running. **Still unverified:** Workspace accounts (custom-domain
+calendar ids), the Calendar API's instance-id convention, real (not synthetic)
+hundreds of events, non-Gregorian calendars — see the phase audit in §12 and RE
 §9.
 
 **Trusted Types (resolved in Phase 2):** Calendar serves
@@ -80,37 +82,57 @@ MAIN-world shim (`src/injected-js/**`).
 6. **Maintainability**: small modules, declarative selector data, typed bridges,
    no god-object driver.
 
+## 2.1 Scope and non-goals
+
+**In scope (V1):** observing Calendar (routes, event chips, popovers, the
+editor, user info) and adding UI to it (badges, popover buttons, top-bar
+buttons, programmatic navigation), with stable event identity and built-in
+change detection; optional event details through an extension-owned data
+provider.
+
+**Non-goals** — deliberately not offered, because each would make the SDK depend
+on more of Calendar's internals or take responsibility for user data:
+
+- **Mutating events through the DOM** (creating, moving, resizing, deleting,
+  RSVPing by clicking Calendar's controls). Use the Calendar API from your
+  extension.
+- **Driving or intercepting drag, resize and quick-create**; the SDK only
+  observes their effects (view destroy/recreate).
+- **Reading Calendar's network traffic or page-world state.** There is no
+  MAIN-world code in V1; identity comes from the DOM.
+- **OAuth, tokens, storage or telemetry.** The core never sees credentials and
+  sends nothing.
+- **A general grid API** (`DayCellView`, `TimeSlotView`, mini-calendar,
+  sidebar); LATER, see §4.
+- **Non-Chromium browsers, mobile layouts, and Calendar embedded in other Google
+  products** (untested).
+- **Remote-loaded code.** Everything ships inside the extension.
+
 ## 3. Target architecture
 
 ```
 src/
-  calendarsdk-js/                      loader/entry: CalendarSDK.load(1, opts)   (from inboxsdk-js/inboxsdk.ts)
-  common/                              shared, no Gmail/Calendar knowledge (ajax→removed?, censor*, assert, …)
+  calendarsdk-js/                      loader/entry: CalendarSDK.load(1, opts)
+  calendarsdk.d.ts                     handwritten public types (the only .d.ts that ships)
+  common/                              censorHTML* (kept for sanitising), version
   platform-implementation-js/
-    platform-implementation.ts         generic shell: (driver, namespaceFactory) — replaces Gmail wiring
-    lib/                               KEEP: Membrane, HandlerRegistry, SafeEventEmitter, stopper-pool, wait-for*
-    lib/dom/                           KEEP: ElementWithLifetime streams; selectorRegistry generalised (§6)
-    lib/reporting/                     NEW: Reporter interface replaces logger.ts telemetry (§11)
-    driver-interfaces/                 NEW real interfaces: Driver, EventViewDriver, EventPopoverViewDriver, RouteViewDriver…
-    namespaces/                        events.ts, router.ts, toolbar.ts, user.ts, calendar.ts
-    views/                             event-view.ts, event-popover-view.ts, event-editor-view.ts, route-view.ts
+    platform-implementation.ts         shell: origin gate, Membrane, namespaces, one-SDK-per-appId
+    lib/                               Membrane, HandlerRegistry, SafeEventEmitter, reporter, wait-for, dom/selectorRegistry
+    driver-interfaces/                 Driver, RouteViewDriver, EventViewDriver, EventPopoverViewDriver, EventEditorViewDriver, toolbar/data types
+    namespaces/                        events, router, user, toolbar, data, compat
+    views/                             event-view, event-popover-view, event-editor-view, route-view/
+    compat/                            checks (selector/identity/structure), structure fingerprints, runner entry
     dom-driver/google-calendar/
-      calendar-driver.ts               thin composition root (≈200 lines), owns stopper + services
-      selectors.ts                     CALENDAR_SELECTORS (ordered candidate chains, keyed)
-      variants.ts                      variant fingerprints + capability flags
-      services/
-        route-service.ts               Navigation API + body[data-viewkey]/[data-viewfamily] classifier
-        root-observer.ts               single root MutationObserver → typed change batches
-        event-registry.ts              (element,eventId) → EventViewDriver lifetimes
-        identity.ts                    decode data-eventid, jslog cross-check, CalendarId map
-        popover-watcher.ts, editor-watcher.ts
-        injection-reconciler.ts        self-healing injected DOM (§7)
-        user-info.ts                   email/locale from #xUserInfo/#initialdata
-      views/                           google-calendar-event-view.ts, …-popover-view.ts, …-editor-view.ts, …-route-view.ts
-  injected-js/                         OPTIONAL page-world shim, off by default in V1 (§9)
-  compat/                              compatibility probes (shared by CI + dev, §compat doc)
-tools/calendar-probe/                  EXPERIMENTAL exploration scripts (exists)
-packages/core → packages/calendar-core (@calendarsdk/core), packages/google-api (@calendarsdk/google-api)
+      calendar-driver.ts               thin composition root: owns the stopper and the services
+      selectors.ts, route-classifier.ts, route-url.ts, identity.ts
+      services/                        route-service, user-info, event-registry (one body MutationObserver),
+                                       injection-reconciler + badge-style, popover-registry + popover-style,
+                                       editor-service, toolbar-service + toolbar-style, calendar-id-map, compat-service
+      views/                           calendar-{route,event,event-popover,event-editor}-view-driver
+  injected-js/                         reserved for an optional MAIN-world canary (xhr-proxy-factory kept dormant), off in V1
+tools/calendar-probe/                  live tools: probes, experiments/extension-*.mjs live tests, compat-runner, capture-fixtures
+packages/core (@calendarsdk/core), packages/google-api (@calendarsdk/google-api)
+__tests__/calendar-fixtures/           sanitised real-markup snapshots + tests against them
 ```
 
 `CalendarDriver` composes services; it must **not** contain: DOM parsing of
@@ -210,9 +232,9 @@ type SelectorOverrides = Partial<Record<SelectorKey, readonly string[]>>; // pre
 | `Events.registerEventPopoverHandler` + `addButton`               | `[role=dialog][data-chips-dialog][data-allow-wheel-scroll=false]` with no `input`/`textarea` (RE §1.7; the `data-eventid` rule was disproven) [V]         | Medium                              | Medium-High | No         | No                       | **MUST**                             |
 | `User.getEmailAddress`                                           | `#xUserInfo` children `#xUserEmail` / `#xTimezone` / `#xUserLocale` [V]                                                                                   | Low                                 | High        | No         | No                       | **MUST**                             |
 | `EventEditorView`                                                | `/r/eventedit/<eid>` route + `input[aria-label=Title]` [V routes; X title selector locale]                                                                | Medium                              | Medium      | No         | No                       | NICE                                 |
-| `Toolbar.addButton`                                              | `header#gb` and header buttons catalogued (RE §8) [V]; insertion point/behaviour not prototyped [X]                                                       | Medium                              | Unknown     | No         | No                       | NICE                                 |
+| `Toolbar.addButton`                                              | **DONE**: before the Search wrapper, self-healing (RE §1.23) [V]                                                                                          | Medium                              | Unknown     | No         | No                       | NICE                                 |
 | `EventView.getTitleText/isAllDay`                                | `data-dragsource-type` (2 timed / 6 all-day / 9 read-only), `role`, `[data-datekey]` [V]; **title text** is locale text (`getTitleText` only)             | Medium                              | Low-Med     | No         | No                       | NICE (prefer dataProvider)           |
-| `Router.goto`                                                    | `history.pushState` + synthetic `popstate` [X: does Calendar honour it?]                                                                                  | Medium                              | Unknown     | Maybe      | No                       | LATER                                |
+| `Router.goto`                                                    | **DONE**: `pushState({}, …)` + `popstate` from the content script, no reload (RE §1.22) [V]                                                               | Medium                              | Unknown     | Maybe      | No                       | LATER                                |
 | `EventRef.calendarId` full                                       | `jslog` field 1 [V for plain events; absent for tasks/birthdays]; `#initialdata` map [X]                                                                  | Medium                              | Medium      | No         | No                       | NICE (hint always available)         |
 | Event details (attendees, description)                           | `dataProvider` → Google Calendar API                                                                                                                      | —                                   | High        | No         | **Yes (provider-owned)** | LATER, via `@calendarsdk/google-api` |
 | `DayCellView`, `TimeSlotView`, `MiniCalendarView`, `SidebarView` | drag/resize lifecycle investigated (RE §1.4–§1.15); these _view classes_ have no structural selectors yet (mini-calendar/sidebar containers uncatalogued) | —                                   | —           | —          | —                        | LATER / EXPERIMENTAL                 |
@@ -382,6 +404,25 @@ may use HTML strings in the content script (Trusted Types do not apply there, RE
 §1.18); MAIN-world code must not. Alternative for V2: an absolutely-positioned
 overlay layer over the grid (immune to re-render but must track layout, scroll
 and drag) — spike before choosing.
+
+### 7.4.1 Overlay layer (design, not built)
+
+For UI that must not live inside Calendar's re-rendered subtrees — the
+motivating case is a **hover card** on an event chip — the alternative to the
+reconciler is a layer owned by the SDK: one fixed-position container appended to
+`document.body` (outside anything Calendar re-renders), holding one card at a
+time, positioned from `chip.getBoundingClientRect()` and flipped to stay in the
+viewport. Rules that keep it robust: the trigger is `pointerenter` on the chips
+the registry already tracks (delegated, with a short delay) **and** keyboard
+focus of the chip; it hides on `pointerleave`, drag start (`pointerdown` on the
+chip), scroll of the grid, route change, popover open, view destroy and Escape;
+it never captures pointer events outside the card; it sits above the grid but
+below Calendar's own popovers; light/dark neutral styling; content is
+app-provided (`render(container, eventView)`), never HTML strings from the app.
+Risks to verify live first: Calendar's own hover behaviour on chips, overlapping
+chips, the stacking order versus popovers and dialogs, and behaviour while
+dragging. Proposed API:
+`EventView.addHoverCard({ render, delayMs? }): HoverCardHandle`.
 
 ### 7.5 Performance
 
@@ -842,14 +883,15 @@ only), a compat baseline for `en` only.
   `COPYRIGHT.txt` and attribution; remove Streak branding, `inboxsdk.com` URLs
   and telemetry endpoints (§11); rename packages (`@calendarsdk/*` is a
   placeholder — owner decision, §17).
-- **Layout.** `packages/calendar-core` (bundle + `background.js` for MV3
-  injection only if the optional shim is used) and `packages/google-api`
-  (optional); handwritten public `.d.ts` like `src/inboxsdk.d.ts`; `examples/`
-  reduced to a few Calendar extensions (route logger, badges, popover button).
+- **Layout.** `packages/core` (self-contained bundle + one handwritten `.d.ts`,
+  no runtime dependencies) and `packages/google-api` (optional, ESM);
+  `examples/` has one small extension per feature.
 - **Support matrix (V1).** Chromium-based browsers, MV3 content scripts, Google
   Calendar web at `https://calendar.google.com/calendar/u/<n>/…`, desktop
-  layout. Unsupported/untested: Firefox/Safari (no Navigation API),
-  Workspace-specific UI, mobile layout, RTL/CJK (until tested).
+  layout, windows down to 420 px. Verified locales: `en de pl ja zh-CN ar he`.
+  Unsupported/untested: Firefox/Safari (no Navigation API; unit-tested fallback
+  only), Workspace-specific UI, non-Gregorian calendars, Calendar embedded in
+  other Google surfaces (e.g. Gmail's side panel — not examined).
 - **Versioning.** SDK semver; `REQUESTED_API_VERSION` gates API changes (start
   at 1); Google UI drift is handled by patch releases + declarative
   `selectorOverrides` and is reported through `Compat`, never as an API break.

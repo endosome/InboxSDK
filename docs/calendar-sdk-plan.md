@@ -799,9 +799,11 @@ only), a compat baseline for `en` only.
    before committing — docs already redact them).
 2. Throwaway MV3 extension proving the isolated-world assumptions (Phase 2 first
    step, above) — de-risks everything else.
-3. Build **sanitised HTML fixtures** for week/month/agenda/popover/quick-create/
-   editor using `common/censorHTMLtree` (extend to preserve `data-eventid`,
-   `data-*`, `jslog` structure with fake ids) → `__tests__/calendar-fixtures/`.
+3. (**done**, hardening pass: `capture-fixtures.mjs` +
+   `__tests__/calendar-fixtures.test.ts`) Build **sanitised HTML fixtures** for
+   week/month/agenda/popover/quick-create/ editor using `common/censorHTMLtree`
+   (extend to preserve `data-eventid`, `data-*`, `jslog` structure with fake
+   ids) → `__tests__/calendar-fixtures/`.
 4. Write `identity.ts` + unit tests (decoder, suffix classifier, failure policy)
    — pure functions, no DOM.
 5. (done in Phase 1, later scoped to MAIN-world code) extract generic core:

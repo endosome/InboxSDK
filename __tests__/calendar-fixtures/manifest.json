@@ -1,0 +1,101 @@
+{
+  "capturedAt": "2026-09-30",
+  "fixtures": {
+    "week": {
+      "description": "week view with events, a task, all-day and recurring chips",
+      "body": {
+        "data-viewfamily": "EVENT",
+        "data-viewkey": "WEEK"
+      },
+      "html": {
+        "lang": "en",
+        "data-ui-kind": "10"
+      },
+      "path": "/calendar/u/0/r/week"
+    },
+    "week-popover-event": {
+      "description": "event popover open over the week view",
+      "body": {
+        "data-viewfamily": "EVENT",
+        "data-viewkey": "WEEK"
+      },
+      "html": {
+        "lang": "en",
+        "data-ui-kind": "10"
+      },
+      "path": "/calendar/u/0/r/week"
+    },
+    "week-popover-task": {
+      "description": "task popover",
+      "body": {
+        "data-viewfamily": "EVENT",
+        "data-viewkey": "WEEK"
+      },
+      "html": {
+        "lang": "en",
+        "data-ui-kind": "10"
+      },
+      "path": "/calendar/u/0/r/week"
+    },
+    "week-quick-create": {
+      "description": "quick-create dialog (has inputs; must NOT be treated as an event popover)",
+      "body": {
+        "data-viewfamily": "EVENT",
+        "data-viewkey": "WEEK"
+      },
+      "html": {
+        "lang": "en",
+        "data-ui-kind": "10"
+      },
+      "path": "/calendar/u/0/r/week"
+    },
+    "month": {
+      "description": "month view",
+      "body": {
+        "data-viewfamily": "EVENT",
+        "data-viewkey": "MONTH"
+      },
+      "html": {
+        "lang": "en",
+        "data-ui-kind": "10"
+      },
+      "path": "/calendar/u/0/r/month"
+    },
+    "month-popover-birthday": {
+      "description": "birthday popover (no Edit button)",
+      "body": {
+        "data-viewfamily": "EVENT",
+        "data-viewkey": "MONTH"
+      },
+      "html": {
+        "lang": "en",
+        "data-ui-kind": "10"
+      },
+      "path": "/calendar/u/0/r/month"
+    },
+    "agenda": {
+      "description": "schedule (agenda) view: static rows instead of absolutely positioned chips",
+      "body": {
+        "data-viewfamily": "EVENT",
+        "data-viewkey": "AGENDA"
+      },
+      "html": {
+        "lang": "en",
+        "data-ui-kind": "10"
+      },
+      "path": "/calendar/u/0/r/agenda/2026/9/30"
+    },
+    "editor": {
+      "description": "full-page editor of an existing event",
+      "body": {
+        "data-viewfamily": "EVENT_EDIT",
+        "data-viewkey": "EVENTEDIT"
+      },
+      "html": {
+        "lang": "en",
+        "data-ui-kind": "10"
+      },
+      "path": "/calendar/u/0/r/eventedit/TOKEN"
+    }
+  }
+}

@@ -35,3 +35,18 @@ structure fingerprints with `baselines/structure.json` and writes
 (broken-selector drill), `--issue-dry-run` (writes issue text; files nothing).
 `compat-nightly.sh` wraps it for cron and keeps dated copies. Needs the
 `[CALSDK]` fixtures (`seed.mjs`) and read-only access only.
+
+## Real-markup fixtures (`capture-fixtures.mjs`)
+
+`node capture-fixtures.mjs` snapshots sanitised copies of real Calendar pages
+(week, month, schedule, event/task/birthday popovers, quick-create, editor) into
+`__tests__/calendar-fixtures/`; `__tests__/calendar-fixtures.test.ts` runs the
+SDK's selectors, identity, popover, editor and toolbar code against them in
+jsdom. Sanitising happens in the page on a clone: all text becomes `x`/`0`,
+attributes that can hold user data (aria-label unless a known UI string, title,
+value, href, `data-*` other than structural ones, `jslog` calendar ids, emails)
+are masked, `data-eventid` tokens are re-encoded from synthetic ids,
+SDK-injected nodes are dropped. **Review the diff and run the tests before
+committing a re-capture, and only capture the test account.** Re-capture when
+Calendar changes and these tests (or the compat runner) fail: the diff of the
+fixtures then shows exactly what Google changed.

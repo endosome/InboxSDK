@@ -225,3 +225,17 @@ Run it nightly with `tools/calendar-probe/compat-nightly.sh` (reports in
 prepend/replace the selector in `selectors.ts` and re-run. After an intentional,
 reviewed Calendar change, refresh the fingerprints with `--update-baseline` and
 commit the diff.
+
+## Real-markup fixtures in unit tests
+
+`__tests__/calendar-fixtures/` holds sanitised snapshots of real Calendar pages
+(`tools/calendar-probe/capture-fixtures.mjs`, captured 2026-09-30, `en`,
+ui-kind 10) and `__tests__/calendar-fixtures.test.ts` checks the SDK against
+them: compat checks report nothing on every page, every selector key is active
+where it must be (so the checks are not vacuous), chips decode with the right
+kinds and segments, popovers are found with the chip's identity (and the real
+quick-create dialog is not), editor fields resolve uniquely (`input#xTiIn`, not
+the shared `jsname`), the toolbar lands before the real Search wrapper. This
+runs in CI without a browser and turns "Google changed the markup" into a
+failing test with a reviewable fixture diff. Fixtures are `en`, one account type
+— locale and Workspace variants would be additional captures.

@@ -3,6 +3,8 @@ Description=CalendarSDK compat run (read-only)
 
 [Service]
 Type=oneshot
+# the opt-in that turns a scheduled run on (see ../compat-nightly.sh); the timer is not installed by the repo
+Environment=CALSDK_SCHEDULE_ENABLED=1
 # edit to your checkout
 WorkingDirectory=%h/InboxSDK/tools/calendar-probe
 ExecStart=%h/InboxSDK/tools/calendar-probe/compat-nightly.sh

@@ -1,2 +1,2 @@
 # NOT installed. Nightly at 03:30 (edit the path):
-# 30 3 * * * cd $HOME/InboxSDK/tools/calendar-probe && ./compat-nightly.sh >> out/nightly.log 2>&1
+# 30 3 * * * cd $HOME/InboxSDK/tools/calendar-probe && CALSDK_SCHEDULE_ENABLED=1 ./compat-nightly.sh >> out/nightly.log 2>&1

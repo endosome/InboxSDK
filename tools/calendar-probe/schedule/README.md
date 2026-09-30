@@ -2,7 +2,9 @@
 
 Decision (owner): runs are **manual for now** (`node compat-runner.mjs`); the
 files here exist so switching to a schedule later is a copy-and-enable, not a
-project. Nothing in this directory is installed or run by the repository.
+project. Nothing in this directory is installed or run by the repository, and
+`compat-nightly.sh` does nothing unless `CALSDK_SCHEDULE_ENABLED=1` is set (the
+service file and the cron example set it — that is the deliberate opt-in).
 
 Before enabling, the owner should be happy with: the automation-vs-Google-terms
 question (one dedicated, read-only test account; no scripted sign-in — the

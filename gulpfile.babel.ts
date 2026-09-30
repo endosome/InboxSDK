@@ -257,8 +257,9 @@ let startedBuildingExamples = false;
 const config: WebpackTaskOptions = {
   entry: {
     [sdkFilename]: {
+      // no `export: 'default'`: the bundle must expose the same namespace as the types
+      // (default, CalendarSDK, load, LOADER_VERSION), see tools/check-packages.mjs
       library: {
-        export: 'default',
         name: 'CalendarSDK',
         type: OutputLibraryType.UMD,
       },

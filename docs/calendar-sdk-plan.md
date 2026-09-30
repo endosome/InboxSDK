@@ -853,6 +853,11 @@ only), a compat baseline for `en` only.
 - **Versioning.** SDK semver; `REQUESTED_API_VERSION` gates API changes (start
   at 1); Google UI drift is handled by patch releases + declarative
   `selectorOverrides` and is reported through `Compat`, never as an API break.
+- **Release.** `docs/releasing.md` (checklist), `CHANGELOG.md`, and
+  `tools/check-packages.mjs` (what `npm pack` would ship: entry points,
+  licenses, no tests/internals, bundle exports match the types; run in CI). The
+  published `core` package holds the self-contained bundle, one hand-written
+  `.d.ts` and the license files only — no runtime dependencies.
 - **Privacy.** No network calls from core; compat reports contain counts and key
   names only (never titles, ids or emails).
 

@@ -24,3 +24,5 @@ yarn-error.log
 tools/calendar-probe/out/
 tools/calendar-probe/node_modules
 /packages/google-api/dist
+/packages/*/LICENSE-*.txt
+/packages/*/COPYRIGHT.txt

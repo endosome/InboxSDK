@@ -8,12 +8,23 @@
   "license": "(MIT OR Apache-2.0)",
   "files": [
     "dist",
-    "src"
+    "LICENSE-MIT.txt",
+    "LICENSE-APACHE.txt",
+    "COPYRIGHT.txt"
   ],
   "scripts": {
-    "build": "../../node_modules/.bin/esbuild src/index.ts --bundle --format=esm --target=es2022 --outfile=dist/index.js --sourcemap && ../../node_modules/.bin/tsc -p tsconfig.build.json"
+    "build": "../../node_modules/.bin/esbuild src/index.ts --bundle --format=esm --target=es2022 --outfile=dist/index.js --sourcemap && ../../node_modules/.bin/tsc -p tsconfig.build.json",
+    "prepack": "node ../../tools/copy-licenses.mjs"
   },
   "peerDependencies": {
     "@calendarsdk/core": "*"
-  }
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "sideEffects": false
 }

@@ -27,6 +27,9 @@ jobs:
             yarn workspace @calendarsdk/google-api build
             ls packages/google-api/dist/index.js packages/google-api/dist/index.d.ts
       - run:
+          name: Check what would be published (npm pack)
+          command: node tools/check-packages.mjs
+      - run:
           name: Clean
           command: yarn gulp clean
   lint JS and TS:

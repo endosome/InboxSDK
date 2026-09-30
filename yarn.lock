@@ -1461,7 +1461,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.23.1, @babel/runtime@npm:^7.8.4":
+"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.8.4":
   version: 7.23.1
   resolution: "@babel/runtime@npm:7.23.1"
   dependencies:
@@ -1520,11 +1520,6 @@ __metadata:
 "@calendarsdk/core@workspace:*, @calendarsdk/core@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@calendarsdk/core@workspace:packages/core"
-  dependencies:
-    "@babel/runtime": "npm:^7.23.1"
-    "@types/kefir": "npm:^3.8.6"
-    "@types/node": "npm:^24.2.0"
-    asap: "npm:^2.0.3"
   languageName: unknown
   linkType: soft
 
@@ -2482,7 +2477,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/kefir@npm:^3.8.6, @types/kefir@npm:^3.8.7":
+"@types/kefir@npm:^3.8.7":
   version: 3.8.7
   resolution: "@types/kefir@npm:3.8.7"
   dependencies:

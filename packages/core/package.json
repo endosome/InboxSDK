@@ -10,13 +10,16 @@
   "files": [
     "calendarsdk.js",
     "calendarsdk.js.map",
-    "calendarsdk.d.ts",
-    "src"
+    "src/calendarsdk.d.ts",
+    "LICENSE-MIT.txt",
+    "LICENSE-APACHE.txt",
+    "COPYRIGHT.txt"
   ],
-  "dependencies": {
-    "@babel/runtime": "^7.23.1",
-    "@types/kefir": "^3.8.6",
-    "@types/node": "^24.2.0",
-    "asap": "^2.0.3"
+  "scripts": {
+    "prepack": "node ../../tools/copy-licenses.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "TBD before publishing"
   }
 }

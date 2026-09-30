@@ -12,3 +12,5 @@ examples/*/*
 .pnp.*
 .yarn/*
 /packages/google-api/dist
+/packages/*/LICENSE-*.txt
+/packages/*/COPYRIGHT.txt

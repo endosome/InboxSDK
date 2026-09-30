@@ -110,6 +110,8 @@ never handles credentials, and its output is git-ignored. See its README.
 - [`docs/getting-started.md`](./docs/getting-started.md) — first extension, step
   by step
 - [`docs/api.md`](./docs/api.md) — API reference
+- [`docs/releasing.md`](./docs/releasing.md) — release checklist;
+  [`CHANGELOG.md`](./CHANGELOG.md)
 - [`docs/calendar-sdk-plan.md`](./docs/calendar-sdk-plan.md) — architecture,
   decisions, phase status
 - [`docs/calendar-reverse-engineering.md`](./docs/calendar-reverse-engineering.md)
